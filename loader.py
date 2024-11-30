@@ -1,5 +1,5 @@
 from db.database import Database
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from data.config import (
     MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE
 )
@@ -14,3 +14,4 @@ app = FastAPI(
     description="OpenAI Clone Platform API",
     version="1.0.0"
 )
+
