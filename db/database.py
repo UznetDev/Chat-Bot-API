@@ -122,7 +122,9 @@ class Database:
                 name VARCHAR(50),
                 model_id INT,
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(id)
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                FOREIGN KEY (model_id) REFERENCES models(id)
+
             )
             """
             self.cursor.execute(sql)
@@ -140,9 +142,11 @@ class Database:
                 user_id INT,
                 role VARCHAR(100),
                 content TEXT,
+                model_id INT,
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (chat_id) REFERENCES chats(id),
-                FOREIGN KEY (user_id) REFERENCES users(id)
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                FOREIGN KEY (model_id) REFERENCES models(id)
             )
             """
             self.cursor.execute(sql)
@@ -174,20 +178,20 @@ class Database:
             logging.error(f"Get chat data error: {err}")
 
 
-    def create_new_chat(self, user_id, name):
+    def create_new_chat(self, user_id, name, model_id):
         try:
-            sql = "INSERT INTO chats (user_id, name) VALUES (%s, %s)"
-            self.cursor.execute(sql, (user_id, name))
+            sql = "INSERT INTO chats (user_id, name, model_id) VALUES (%s, %s, %s)"
+            self.cursor.execute(sql, (user_id, name, model_id))
             self.connection.commit()
             return self.cursor.lastrowid
         except mysql.connector.Error as err:
             logging.error(f"Create new chat error: {err}")
             raise
 
-    def save_chat_message(self, chat_id, user_id, role, content):
+    def save_chat_message(self, chat_id, user_id, role, content, model_id):
         try:
-            sql = "INSERT INTO chat_messages (chat_id, user_id, role, content) VALUES (%s, %s, %s, %s)"
-            self.cursor.execute(sql, (chat_id, user_id, role, content))
+            sql = "INSERT INTO chat_messages (chat_id, user_id, role, content, model_id) VALUES (%s, %s, %s, %s, %s)"
+            self.cursor.execute(sql, (chat_id, user_id, role, content, model_id))
             self.connection.commit()
         except mysql.connector.Error as err:
             logging.error(f"Save chat message error: {err}")
@@ -206,11 +210,12 @@ class Database:
         try:
             sql = "SELECT * FROM chats WHERE id = %s"
             self.cursor.execute(sql, (chat_id,))
-            return self.cursor.fetchone() is not None
+            return self.cursor.fetchone()
         except mysql.connector.Error as err:
             logging.error(f"Check chat exists error: {err}")
             raise
 
+    
 
     def delete_chat(self, chat_id, user_id):
         try:
@@ -308,6 +313,22 @@ class Database:
             return self.cursor.fetchone() is not None
         except mysql.connector.Error as err:
             logging.error(f"Check model exists error: {err}")
+    
+    def update_chat_model(self, chat_id, model_id):
+        try:
+            sql = "UPDATE chats SET model_id = %s WHERE id = %s"
+            self.cursor.execute(sql, (model_id, chat_id))
+            self.connection.commit()
+        except mysql.connector.Error as err:
+            logging.error(f"Update chat model error: {err}")
+
+    def get_model_infos(self, model_id):
+        try:
+            sql = "SELECT * FROM models WHERE id = %s"
+            self.cursor.execute(sql, (model_id,))
+            return self.cursor.fetchone()
+        except mysql.connector.Error as err:
+            logging.error(f"Get model infos error: {err}")
 
 
 

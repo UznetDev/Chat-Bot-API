@@ -35,13 +35,13 @@ def get_chat_data(token: str, chat_id: int):
 
 
 @router.post("/create_chat")
-def create_chat(token: str):
+def create_chat(token: str, model_id=1):
     try:
         user_info = db.login_by_token(token)
         if user_info is None:
             raise HTTPException(status_code=404, detail="User not found")
         user_id = user_info["id"]
-        chat_id = db.create_new_chat(user_id, 'Unknown')
+        chat_id = db.create_new_chat(user_id, 'Unknown', model_id)
 
         return {"chat_id": chat_id}
     except Exception as e:
