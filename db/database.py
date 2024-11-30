@@ -112,7 +112,7 @@ class Database:
             logging.error(f"Token update error: {err}")
             raise
 
-
+    # Chat Guide
     def create_chats_table(self):
         try:
             sql = """
@@ -202,6 +202,16 @@ class Database:
             logging.error(f"Get chat messages error: {err}")
             raise
 
+    def check_chat_exists(self, chat_id):
+        try:
+            sql = "SELECT * FROM chats WHERE id = %s"
+            self.cursor.execute(sql, (chat_id,))
+            return self.cursor.fetchone() is not None
+        except mysql.connector.Error as err:
+            logging.error(f"Check chat exists error: {err}")
+            raise
+
+
     def delete_chat(self, chat_id, user_id):
         try:
             sql = "DELETE FROM chats WHERE id = %s AND user_id = %s"
@@ -231,13 +241,9 @@ class Database:
             raise
 
   
-    def close(self):
-        if hasattr(self, 'connection'):
-            self.cursor.close()
-            self.connection.close()
+
 
     # HASh
-
     def hash_password(self, password):
         """
         This function hashes a password using SHA-256.
@@ -249,3 +255,63 @@ class Database:
         This function verifies a password by comparing its hashed version.
         """
         return hashed_password == hashlib.sha256(user_password.encode()).hexdigest()
+    
+    # Model
+
+    def create_table_models(self):
+        """
+        This function creates the models table in the database.
+        """
+        try:
+            sql = """
+            CREATE TABLE IF NOT EXISTS models (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                type VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+            self.cursor.execute(sql)
+            self.connection.commit()
+
+            # add 3 models
+            models = [
+                ("gpt-4o-mini", "More capable than any GPT-3.5 model, able to do more complex tasks, and optimized for chat. Will be updated with our latest model iteration.", "chat"),
+                ("gpt-3.5-turbo", "Most capable GPT-3.5 model and optimized for chat at 1/10th the cost of text-davinci-003. Will be updated with our latest model iteration.", "chat"),
+                ("gpt-4", "More capable than any GPT-3.5 model, able to do more complex tasks, and optimized for chat. Will be updated with our latest model iteration.", "chat"),
+    
+            ]
+
+            for model in models:
+                self.cursor.execute("SELECT * FROM models WHERE name = %s", (model[0],))
+                if self.cursor.fetchone() is None:
+                    self.cursor.execute("INSERT INTO models (name, description, type) VALUES (%s, %s, %s)", model)
+                    self.connection.commit()
+
+        except mysql.connector.Error as err:
+            logging.error(f"Create models table error: {err}")
+
+
+    def get_models_list(self):
+        try:
+            sql = "SELECT * FROM models"
+            self.cursor.execute(sql)
+            return self.cursor.fetchall()
+        except mysql.connector.Error as err:
+            logging.error(f"Get models list error: {err}")
+
+    def check_model_exists(self, model_name):
+        try:
+            sql = "SELECT * FROM models WHERE name = %s"
+            self.cursor.execute(sql, (model_name,))
+            return self.cursor.fetchone() is not None
+        except mysql.connector.Error as err:
+            logging.error(f"Check model exists error: {err}")
+
+
+
+    def close(self):
+        if hasattr(self, 'connection'):
+            self.cursor.close()
+            self.connection.close()

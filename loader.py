@@ -1,5 +1,6 @@
 from db.database import Database
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI
+from models.openai_models import Models
 from data.config import (
     MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE
 )
@@ -15,3 +16,4 @@ app = FastAPI(
     version="1.0.0"
 )
 
+model = Models()

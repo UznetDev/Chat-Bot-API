@@ -14,6 +14,4 @@ MYSQL_DATABASE = os.getenv('MYSQL_DATABASE')
 ADMIN_USERNAME = os.getenv('ADMIN_USERNAME')
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')
 
-# JWT Token konfiguratsiyasi
-JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
-JWT_ALGORITHM = os.getenv('JWT_ALGORITHM')
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
