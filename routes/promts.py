@@ -3,9 +3,7 @@ from loader import db, model
 from fastapi import APIRouter
 
 
-
 router = APIRouter()
-
 
 
 @router.get("/get_models")
