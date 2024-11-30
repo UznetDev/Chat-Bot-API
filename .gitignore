@@ -2,3 +2,5 @@ env/
 env
 .command/
 .command
+.env
+__pycache__
