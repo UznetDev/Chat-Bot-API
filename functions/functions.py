@@ -3,52 +3,25 @@ import string
 
 def generate_token(length=200):
     """
-    Generates a random token with the specified length using letters, digits, and punctuation characters.
+    Generates a random token consisting of Latin letters (both uppercase and lowercase)
+    and digits. The token will have a length specified by the 'length' parameter.
 
-    Parameters:
-        length (int): The desired length of the token. Default is 200. Must be a positive integer.
+    Args:
+        length (int): The length of the token to be generated. Default is 200.
 
     Returns:
-        str: A string containing the generated random token.
-
-    Raises:
-        ValueError: If the provided length is less than or equal to 0.
-
-    How it works:
-        1. Validates the `length` parameter to ensure it is a positive integer.
-        2. Combines `string.ascii_letters`, `string.digits`, and `string.punctuation` to create a pool of characters.
-        3. Randomly selects `length` characters from the pool using `random.choice` in a list comprehension.
-        4. Joins the selected characters into a single string and returns it.
+        str: A randomly generated token.
 
     Example:
-        >>> generate_token(16)
-        'aB1!cD2@Ef3#Gh4$'
-
-        >>> generate_token(8)
-        'Xy9!z2@L'
-
-        # Using the default length of 200
-        >>> token = generate_token()
-        >>> len(token)
-        200
+        token = generate_token(50)
+        print(token)  # Example output: 'aB3dE9FgHj2K1LmNo4P5QrStUvWxYzZ8A0bCdEfGhIj'
 
     Notes:
-        - The token may include special characters from `string.punctuation`.
-        - Ensure the specified `length` is appropriate for your use case.
-
+        - The function uses the `random.choices` method for efficient random selection.
+        - The pool of characters includes lowercase and uppercase English letters and digits.
     """
-    if length <= 0:
-        raise ValueError("Token length must be a positive integer.")
-    
-    characters = string.ascii_letters + string.digits + string.punctuation
-    
-    token = ''.join(random.choice(characters) for _ in range(length))
+    # Define the pool of characters: lowercase, uppercase, and digits
+    characters = string.ascii_letters + string.digits
+    # Generate the token using random.choices
+    token = ''.join(random.choices(characters, k=length))
     return token
-
-# Example Usage
-try:
-    token_length = 16  # Specify the token length
-    token = generate_token(token_length)
-    print(f"Generated token: {token}")
-except ValueError as e:
-    print(f"Error: {e}")
