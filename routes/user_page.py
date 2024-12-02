@@ -26,6 +26,7 @@ def get_chat_list(token: str):
             - 500: If an internal server error occurs.
 
     Example:
+    
         >>> response = get_chat_list("valid_token")
         >>> response
         {"chats": [{"id": 1, "name": "Chat 1", "timestamp": "2024-01-01T12:00:00"}]}
@@ -103,7 +104,7 @@ def create_chat(token: str, model_id=1):
 
     Example:
 
-    
+
         >>> response = create_chat("valid_token", model_id=2)
         >>> response
         {"chat_id": 42}
