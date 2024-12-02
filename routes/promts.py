@@ -53,7 +53,15 @@ def get_answer(question: str, chat_id: int, token: str, model_id=None):
 
         db.save_chat_message(chat_id=chat_id, user_id=user_id, content=question, role='user', model_id=model_id)
 
-        answer = model.get_answer(promts, model_name)
+        answer = """
+Here's a simple Python code to print "Hello, World!":
+
+```python
+print("Hello, World!")
+```
+
+This is the standard way to output "Hello, World!" in Python. Let me know if you'd like variations or something more!
+"""#model.get_answer(promts, model_name)
 
         db.save_chat_message(chat_id=chat_id, user_id=user_id, content=answer, role="assistant", model_id=model_id)
         
