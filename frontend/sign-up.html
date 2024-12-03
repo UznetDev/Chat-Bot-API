@@ -39,6 +39,8 @@
         
 
     <script>
+
+        const BASE_API = 'http://127.0.0.1:8000';
         document.addEventListener('DOMContentLoaded', function() {
             const form = document.getElementById('sign_form');
             if (!form) {
@@ -52,7 +54,7 @@
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
 
-                fetch('http://chatbot.codernet.uz/auth/register/', {
+                fetch(`${BASE_API}/auth/register/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

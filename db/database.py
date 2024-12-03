@@ -52,6 +52,7 @@ class Database:
         except mysql.connector.Error as err:
             logging.error(f"Database connection error: {err}")
             raise
+    
     def ensure_connection(self):
         """
         Ulanish holatini tekshirish va kerak bo'lsa qayta ulanish.
@@ -59,7 +60,6 @@ class Database:
         if not self.connection.is_connected():
             logging.warning("Connection lost, reconnecting...")
             self.reconnect()
-
 
     # ========================= User Management =========================
     def create_user_table(self):
@@ -90,6 +90,8 @@ class Database:
         except mysql.connector.Error as err:
             logging.error(f"Create user table error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
     def register_user(self, username, email, password, token=None):
         """
@@ -119,6 +121,8 @@ class Database:
         except mysql.connector.Error as err:
             logging.error(f"User registration error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
     def login_user(self, username, password):
         """
@@ -145,6 +149,8 @@ class Database:
         except mysql.connector.Error as err:
             logging.error(f"Login error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
     def check_username_exists(self, username):
         """
@@ -167,6 +173,8 @@ class Database:
         except mysql.connector.Error as err:
             logging.error(f"Username check error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
     def check_email_exists(self, email):
         """
@@ -189,6 +197,8 @@ class Database:
         except mysql.connector.Error as err:
             logging.error(f"Email check error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
     def login_by_token(self, token):
         """
@@ -211,6 +221,8 @@ class Database:
         except mysql.connector.Error as err:
             logging.error(f"Token login error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
     def update_user_token(self, user_id, token):
         """
@@ -245,6 +257,7 @@ class Database:
             - timestamp: TIMESTAMP (Default: CURRENT_TIMESTAMP)
         """
         try:
+            self.ensure_connection()
             sql = """
             CREATE TABLE IF NOT EXISTS chats (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -261,6 +274,8 @@ class Database:
         except mysql.connector.Error as err:
             logging.error(f"Create chat table error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
 
     def create_table_chat_messages(self):
@@ -277,6 +292,7 @@ class Database:
             - timestamp: TIMESTAMP (Default: CURRENT_TIMESTAMP)
         """
         try:
+            self.ensure_connection()
             sql = """
             CREATE TABLE IF NOT EXISTS chat_messages (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -296,6 +312,8 @@ class Database:
         except mysql.connector.Error as err:
             logging.error(f"Create chat messages table error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
 
     def get_user_chat_list(self, user_id):
@@ -315,12 +333,15 @@ class Database:
             mysql.connector.Error: If the operation fails.
         """
         try:
+            self.ensure_connection()
             sql = "SELECT id, name, timestamp FROM chats WHERE user_id = %s ORDER BY timestamp DESC"
             self.cursor.execute(sql, (user_id,))
             return self.cursor.fetchall()
         except mysql.connector.Error as err:
             logging.error(f"Get chat list error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
 
     def get_chat_data(self, chat_id, user_id):
@@ -338,12 +359,15 @@ class Database:
             mysql.connector.Error: If the operation fails.
         """
         try:
+            self.ensure_connection()
             sql = "SELECT * FROM chat_messages WHERE chat_id = %s AND user_id = %s"
             self.cursor.execute(sql, (chat_id, user_id))
             return self.cursor.fetchall()
         except mysql.connector.Error as err:
             logging.error(f"Get chat data error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
 
     def create_new_chat(self, user_id, name, model_id):
@@ -362,6 +386,7 @@ class Database:
             mysql.connector.Error: If the operation fails.
         """
         try:
+            self.ensure_connection()
             sql = "INSERT INTO chats (user_id, name, model_id) VALUES (%s, %s, %s)"
             self.cursor.execute(sql, (user_id, name, model_id))
             self.connection.commit()
@@ -369,6 +394,8 @@ class Database:
         except mysql.connector.Error as err:
             logging.error(f"Create new chat error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
 
     def save_chat_message(self, chat_id, user_id, role, content, model_id):
@@ -386,12 +413,15 @@ class Database:
             mysql.connector.Error: If the operation fails.
         """
         try:
+            self.ensure_connection()
             sql = "INSERT INTO chat_messages (chat_id, user_id, role, content, model_id) VALUES (%s, %s, %s, %s, %s)"
             self.cursor.execute(sql, (chat_id, user_id, role, content, model_id))
             self.connection.commit()
         except mysql.connector.Error as err:
             logging.error(f"Save chat message error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
 
     def delete_chat(self, chat_id, user_id):
@@ -406,12 +436,15 @@ class Database:
             mysql.connector.Error: If the operation fails.
         """
         try:
+            self.ensure_connection()
             sql = "DELETE FROM chats WHERE id = %s AND user_id = %s"
             self.cursor.execute(sql, (chat_id, user_id))
             self.connection.commit()
         except mysql.connector.Error as err:
             logging.error(f"Delete chat error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
 
     def delete_chat_messages(self, chat_id, user_id):
@@ -426,15 +459,18 @@ class Database:
             mysql.connector.Error: If the operation fails.
         """
         try:
+            self.ensure_connection()
             sql = "DELETE FROM chat_messages WHERE chat_id = %s AND user_id = %s"
             self.cursor.execute(sql, (chat_id, user_id))
             self.connection.commit()
         except mysql.connector.Error as err:
             logging.error(f"Delete chat messages error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
 
-    def get_chat_name(self, chat_id, user_id):
+    def get_chat_info(self, chat_id, user_id):
         """
         Retrieves the name of a specific chat for a user.
 
@@ -449,13 +485,16 @@ class Database:
             mysql.connector.Error: If the operation fails.
         """
         try:
-            sql = "SELECT name FROM chats WHERE id = %s AND user_id = %s"
+            self.ensure_connection()
+            sql = "SELECT * FROM chats WHERE id = %s AND user_id = %s"
             self.cursor.execute(sql, (chat_id, user_id))
             result = self.cursor.fetchone()
             return result
         except mysql.connector.Error as err:
             logging.error(f"Get chat name error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
 
 # ========================= Password Utilities =========================
@@ -575,12 +614,15 @@ class Database:
         """
         try:
             self.ensure_connection()
+            self.ensure_connection()
             sql = "SELECT * FROM models"
             self.cursor.execute(sql)
             return self.cursor.fetchall()
         except mysql.connector.Error as err:
             logging.error(f"Get models list error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
 
     def check_model_exists(self, model_name):
@@ -597,12 +639,15 @@ class Database:
             mysql.connector.Error: If the query fails.
         """
         try:
+            self.ensure_connection()
             sql = "SELECT * FROM models WHERE name = %s"
             self.cursor.execute(sql, (model_name,))
             return self.cursor.fetchone() is not None
         except mysql.connector.Error as err:
             logging.error(f"Check model exists error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
 
     def update_chat_model(self, chat_id, model_id):
@@ -617,12 +662,15 @@ class Database:
             mysql.connector.Error: If the update fails.
         """
         try:
+            self.ensure_connection()
             sql = "UPDATE chats SET model_id = %s WHERE id = %s"
             self.cursor.execute(sql, (model_id, chat_id))
             self.connection.commit()
         except mysql.connector.Error as err:
             logging.error(f"Update chat model error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
 
     def get_model_infos(self, model_id):
@@ -644,13 +692,45 @@ class Database:
             mysql.connector.Error: If the query fails.
         """
         try:
+            self.ensure_connection()
             sql = "SELECT * FROM models WHERE id = %s"
             self.cursor.execute(sql, (model_id,))
             return self.cursor.fetchone()
         except mysql.connector.Error as err:
             logging.error(f"Get model infos error: {err}")
             raise
+        finally:
+            self.cursor.nextset()
 
+    def get_chat_messages(self, chat_id, user_id):
+        """
+        Retrieves all messages associated with a specific chat for a given user.
+
+        Parameters:
+            chat_id (int): The ID of the chat to retrieve messages from.
+            user_id (int): The ID of the user for whom to retrieve messages.
+
+        Returns:
+            list[dict]: A list of dictionaries, each containing:
+                - id: INT (Message ID)
+                - chat_id: INT (Chat ID)
+                - user_id: INT (User ID)
+                - content: TEXT (Message content)
+                - created_at: TIMESTAMP (Message creation timestamp)
+
+        Raises:
+            mysql.connector.Error: If the query fails.
+        """
+        try:
+            self.ensure_connection()
+            sql = "SELECT * FROM chat_messages WHERE chat_id = %s AND user_id = %s"
+            self.cursor.execute(sql, (chat_id, user_id))
+            return self.cursor.fetchall()
+        except mysql.connector.Error as err:
+            logging.error(f"Get model infos error: {err}")
+            raise
+        finally:
+            self.cursor.nextset()
 
     # ========================= Closing Resources =========================
 
@@ -666,10 +746,14 @@ class Database:
             db = Database(host="localhost", user="root", password="password", database="testdb")
             db.close()
         """
-        if hasattr(self, 'connection'):
+        if self.cursor:
             self.cursor.close()
+        if self.connection:
             self.connection.close()
 
-            if hasattr(self, 'connection'):
-                self.cursor.close()
-                self.connection.close()
+
+    def __del__(self):
+        """
+        Ensures the database connection is closed when the object is deleted.
+        """
+        self.close()

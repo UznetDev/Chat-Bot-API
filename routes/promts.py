@@ -103,7 +103,9 @@ def get_answer(question: str, chat_id: int, token: str, model_id=None):
         HTTPException: {"status_code": 401, "detail": "Invalid token"}
     """
     try:
-        chat_info = db.check_chat_exists(chat_id)
+        user_info = db.login_by_token(token)
+        user_id = user_info['id']
+        chat_info = db.get_chat_info(chat_id, user_id)
         if chat_info is None:
             raise HTTPException(status_code=404, detail="Chat not found")
         
@@ -119,8 +121,7 @@ def get_answer(question: str, chat_id: int, token: str, model_id=None):
         
         db.update_chat_model(chat_id=chat_id, model_id=model_id)
 
-        user_info = db.login_by_token(token)
-        user_id = user_info['id']
+
         chat_history = db.get_chat_messages(chat_id, user_id)
         if not chat_history:
             chat_history = []

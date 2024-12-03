@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <title>Sticky Input</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="content">
-        <p>Bu yerda har qanday kontent bo'lishi mumkin. Kiritish maydoni faqat pastda qoladi va boshqa elementlarga ta'sir qilmaydi.</p>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus nec iaculis mauris.</p>
-
+        <p id="user-info"></p>
+        <p id="description"></p>
 
         <div class="dropdown-container">
             <button id="dropdownButton">Select Model</button>
             <div class="dropdown-menu" id="dropdownMenu">
-                <!-- Model nomlari dinamik ravishda JS orqali qo'shiladi -->
             </div>
         </div>
-        
+        <div id="meassage_box">
+            
+        </div>
     </div>
 
     <div class="input-container">
@@ -29,7 +30,7 @@
             </svg>
         </button>
     </div>
-
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="main.js"></script>
 </body>
 </html>
