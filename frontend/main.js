@@ -127,13 +127,7 @@ send_button.addEventListener('click', async () => {
         // Create bot message element
         const botDiv = document.createElement("div");
         botDiv.className = "message bot";
-
-        const htmlContent = marked(answerData.answer);
-        // const messageBox = document.getElementById('meassage_box');
-        // messageBox.innerHTML = htmlContent;
-        
-        // botDiv.innerHTML = `<strong>Bot:</strong> ${answerData.answer}`;
-        botDiv.innerHTML = htmlContent;
+        botDiv.innerHTML = `<strong>Bot:</strong> ${answerData.answer}`;
         meassage_box.appendChild(botDiv);
 
 
@@ -154,3 +148,26 @@ function message_box(){
     }
 }
 message_box();
+
+
+// Example markdown text
+const markdownText = `
+Here's a simple Python code to print "Hello, World!": 
+
+\`\`\`python
+print("Hello, World!")
+\`\`\`
+
+This is the standard way to output "Hello, World!" in Python. Let me know if you'd like variations or something more!
+`;
+
+// Convert Markdown to HTML
+const htmlContent = marked.parse(markdownText, {
+    highlight: function (code, lang) {
+        const validLang = hljs.getLanguage(lang) ? lang : 'plaintext';
+        return hljs.highlight(code, { language: validLang }).value;
+    },
+});
+
+// Display rendered HTML in the output div
+document.getElementById('markdown-output').innerHTML = htmlContent;

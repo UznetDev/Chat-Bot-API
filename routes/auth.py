@@ -17,10 +17,18 @@ class UserCreate(BaseModel):
         username (str): The desired username for the new user.
         email (str): The user's email address.
         password (str): The user's password.
+        surname: (str): The user's Surname.
+        name: (str): The user's Name.
+        api_key: (str): The user's OpenAI API key.
+
     """
     username: str
     email: str
     password: str
+    surname: str
+    name: str
+    api_key: str
+
 
 class UserLogin(BaseModel):
     """
@@ -36,36 +44,46 @@ class UserLogin(BaseModel):
 
 
 @router.post("/register")
+@router.get("/register")
 def register(user: UserCreate):
     """
     Registers a new user by validating their information and storing it in the database.
 
     Parameters:
-        user (UserCreate): A Pydantic model containing the user's username, email, and password.
+        user (UserCreate): A Pydantic model containing the user's username, email, password, surname, surnarme api api_key.
 
     Returns:
-        dict: A dictionary containing the new user's ID and access token.
+        dict: A dictionary containing the new user's ID and access token: {"user_id": 1, "access_token": "random_token"}.
 
     Raises:
-        HTTPException: If an error occurs during registration or if the email/username already exists.
+        HTTPException(status_code=400, detail='Error message'): If an error occurs during registration.
 
     How it works:
         1. Extracts the `username`, `email`, and `password` from the `user` object.
         2. Checks if the `email` or `username` already exists using database methods.
         3. If unique, generates a token and registers the user in the database.
         4. Returns the newly created user ID and access token.
+        5. if email already exist's return {"message": "Email already exists."}
+        6. if username already exist's return {"message": "Username already exists."}
+
+    Note:
+        This function assumes that the `db` object has methods `check_email_exists`, `check_username_exists`, and `register_user`.
 
     Example:
 
         >>> user_data = {"username": "john_doe", "email": "john@example.com", "password": "secure123"}
         >>> response = register(UserCreate(**user_data))
         >>> response
-        {"user_id": 1, "access_token": "random_token"}
+        >>> {"user_id": 1, "access_token": "random_token"}
     """
     try:
         email = user.email
         username = user.username
         password = user.password
+        surname = user.surname
+        name = user.name
+        api_key = user.api_key
+
         
         if db.check_email_exists(email):
             return {"message": "Email already exists."}
@@ -73,7 +91,13 @@ def register(user: UserCreate):
             return {"message": "Username already exists."}
 
         token = generate_token()
-        user_id = db.register_user(username, email, password, token)
+        user_id = db.register_user(username=username,
+                                   email=email,
+                                   password=password,
+                                   surname=surname,
+                                   name=name,
+                                   api_key=api_key,
+                                   token=token)
 
         return {"user_id": user_id, "access_token": token}
     except Exception as e:
@@ -81,6 +105,7 @@ def register(user: UserCreate):
 
 
 @router.post("/login")
+@router.get("/login")
 def login(user: UserLogin):
     """
     Logs in an existing user by validating their credentials.

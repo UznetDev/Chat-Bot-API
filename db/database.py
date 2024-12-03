@@ -5,7 +5,7 @@ import hashlib
 
 class Database:
     """
-    A class to manage database interactions, including user authentication and token management.
+    A class to manage database interactions, including user authentication and access_token management.
 
     Attributes:
         host (str): The hostname of the MySQL server.
@@ -14,6 +14,10 @@ class Database:
         database (str): The name of the database to connect to.
         connection (mysql.connector.connection_cext.CMySQLConnection): Database connection object.
         cursor (mysql.connector.cursor_cext.CMySQLCursorDict): Database cursor object.
+
+    Example:
+        >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+
     """
 
     def __init__(self, host, user, password, database):
@@ -25,6 +29,9 @@ class Database:
             user (str): The username for the MySQL database.
             password (str): The password for the MySQL database.
             database (str): The name of the database to connect to.
+
+        Example:
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
         """
         self.host = host
         self.user = user
@@ -35,6 +42,20 @@ class Database:
     def reconnect(self):
         """
         Establishes a new connection to the database.
+
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> try:
+            >>>     db.ensure_connection()
+            >>>     sql = "SELECT * FROM users WHERE email = %s"
+            >>>     db.cursor.execute(sql, (email,))
+            >>>     return db.cursor.fetchone() is not None
+            >>> except mysql.connector.Error as err:
+            >>>     logging.error(f"Email check error: {err}")
+            >>>     db.reconnect()
+            >>> finally:
+            >>>     db.cursor.nextset()
 
         Raises:
             mysql.connector.Error: If the connection fails.
@@ -80,20 +101,26 @@ class Database:
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 username VARCHAR(50) UNIQUE NOT NULL,
+                name VARCHAR(100),
+                surname VARCHAR(100),
+                api_key TEXT,
+                phone_number VARCHAR(20),
+                last_login DATETIME,
+                date_joined DATETIME DEFAULT CURRENT_TIMESTAMP,
                 email VARCHAR(100) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
-                token VARCHAR(255) UNIQUE,
-                date DATETIME DEFAULT CURRENT_TIMESTAMP
+               access_token VARCHAR(255) UNIQUE
             )
             """
             self.cursor.execute(sql)
         except mysql.connector.Error as err:
             logging.error(f"Create user table error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
 
-    def register_user(self, username, email, password, token=None):
+
+    def register_user(self, username, email, password, token, surname, name, api_key):
         """
         Registers a new user with hashed password and optional token.
 
@@ -101,8 +128,16 @@ class Database:
             username (str): The user's username.
             email (str): The user's email.
             password (str): The user's plaintext password.
-            token (str, optional): A unique token for the user. Defaults to None.
+            access_token (str, optional): A unique access_token for the user. Defaults to None.
+            surname (str): The user's surname.
+            name (str): The user's name.
+            api_key (str): The user's OpenAI key.
 
+        Example:
+            
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> user_id = db.register_user('john_doe', 'john@email.com', 'john1234', 'access_token', 'Doe', 'John', 'sk-....')
+        
         Returns:
             int: The ID of the newly created user.
 
@@ -113,16 +148,17 @@ class Database:
             self.ensure_connection()
             hashed_password = self.hash_password(password)
             sql = """
-            INSERT INTO users (username, email, password, token) VALUES (%s, %s, %s, %s)
+            INSERT INTO users (username, email, password, token, surname, name, api_key) VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
-            values = (username, email, hashed_password, token)
+            values = (username, email, hashed_password, token, surname, name, api_key)
             self.cursor.execute(sql, values)
             return self.cursor.lastrowid
         except mysql.connector.Error as err:
             logging.error(f"User registration error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
+
 
     def login_user(self, username, password):
         """
@@ -148,9 +184,10 @@ class Database:
             return None
         except mysql.connector.Error as err:
             logging.error(f"Login error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
+
 
     def check_username_exists(self, username):
         """
@@ -172,7 +209,7 @@ class Database:
             return self.cursor.fetchone() is not None
         except mysql.connector.Error as err:
             logging.error(f"Username check error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
 
@@ -196,52 +233,57 @@ class Database:
             return self.cursor.fetchone() is not None
         except mysql.connector.Error as err:
             logging.error(f"Email check error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
+
 
     def login_by_token(self, token):
         """
         Authenticates a user using their token.
 
         Parameters:
-            token (str): The authentication token.
+           access_token (str): The authentication token.
 
         Returns:
-            dict: The user's information if the token is valid, otherwise None.
+            dict: The user's information if the access_token'is valid, otherwise None.
 
         Raises:
             mysql.connector.Error: If the operation fails.
         """
         try:
             self.ensure_connection()
-            sql = "SELECT * FROM users WHERE token = %s"
+            sql = "SELECT * FROM users WHERE access_token = %s"
             self.cursor.execute(sql, (token,))
             return self.cursor.fetchone()
         except mysql.connector.Error as err:
             logging.error(f"Token login error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
 
+
     def update_user_token(self, user_id, token):
         """
-        Updates the authentication token for a specific user.
+        Updates the authentication access_token for a specific user.
 
         Parameters:
             user_id (int): The user's ID.
-            token (str): The new token.
+            access_token (str): The new token.
 
         Raises:
             mysql.connector.Error: If the operation fails.
         """
         try:
-            sql = "UPDATE users SET token = %s WHERE id = %s"
+            sql = "UPDATE users SET access_token = %s WHERE id = %s"
             self.cursor.execute(sql, (token, user_id))
             self.connection.commit()
         except mysql.connector.Error as err:
             logging.error(f"Token update error: {err}")
-            raise
+            self.reconnect()
+        finally:
+            self.cursor.nextset()
+
         
     # ========================= Chat Management =========================
 
@@ -273,9 +315,10 @@ class Database:
             self.connection.commit()
         except mysql.connector.Error as err:
             logging.error(f"Create chat table error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
+
 
 
     def create_table_chat_messages(self):
@@ -311,9 +354,10 @@ class Database:
             self.connection.commit()
         except mysql.connector.Error as err:
             logging.error(f"Create chat messages table error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
+
 
 
     def get_user_chat_list(self, user_id):
@@ -339,9 +383,10 @@ class Database:
             return self.cursor.fetchall()
         except mysql.connector.Error as err:
             logging.error(f"Get chat list error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
+
 
 
     def get_chat_data(self, chat_id, user_id):
@@ -365,9 +410,10 @@ class Database:
             return self.cursor.fetchall()
         except mysql.connector.Error as err:
             logging.error(f"Get chat data error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
+
 
 
     def create_new_chat(self, user_id, name, model_id):
@@ -393,9 +439,10 @@ class Database:
             return self.cursor.lastrowid
         except mysql.connector.Error as err:
             logging.error(f"Create new chat error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
+
 
 
     def save_chat_message(self, chat_id, user_id, role, content, model_id):
@@ -419,9 +466,10 @@ class Database:
             self.connection.commit()
         except mysql.connector.Error as err:
             logging.error(f"Save chat message error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
+
 
 
     def delete_chat(self, chat_id, user_id):
@@ -442,9 +490,10 @@ class Database:
             self.connection.commit()
         except mysql.connector.Error as err:
             logging.error(f"Delete chat error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
+
 
 
     def delete_chat_messages(self, chat_id, user_id):
@@ -465,9 +514,10 @@ class Database:
             self.connection.commit()
         except mysql.connector.Error as err:
             logging.error(f"Delete chat messages error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
+
 
 
     def get_chat_info(self, chat_id, user_id):
@@ -492,9 +542,10 @@ class Database:
             return result
         except mysql.connector.Error as err:
             logging.error(f"Get chat name error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
+
 
 
 # ========================= Password Utilities =========================
@@ -557,12 +608,22 @@ class Database:
             - name: VARCHAR(255) (Name of the model, not null)
             - description: TEXT (Description of the model)
             - type: VARCHAR(255) (Type of the model, e.g., 'chat', not null)
-            - created_at: TIMESTAMP (Default: CURRENT_TIMESTAMP)
+            - system: TEXT (System promt for model)
+            - visibility: VARCHAR(30): Visibility of model.
+            - creator_id: INT (Foreign key referencing the users table)
+            - created_date: TIMESTAMP (Default: CURRENT_TIMESTAMP)
+            - max_token: INT (Maximum token limit for the model)
+            - admin_acsess: BOOLEAN DEAFAULT 1 (Indicates if the model requires admin access)
 
         Pre-populated models:
             - gpt-4o-mini
             - gpt-3.5-turbo
             - gpt-4
+
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> db.create_table_models()
 
         Raises:
             mysql.connector.Error: If the table creation or insertion of default models fails.
@@ -573,8 +634,14 @@ class Database:
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(255) NOT NULL,
                 description TEXT,
+                system TEXT,
+                visibility VARCHAR(30),
+                max_tokens INT,
+                cretor_id INT,
+                admin_acsess BOOLEAN DEFAULT 1,
                 type VARCHAR(255) NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                FOREIGN KEY (cretor_id) REFERENCES users(id)
             )
             """
             self.cursor.execute(sql)
@@ -594,7 +661,11 @@ class Database:
                     self.connection.commit()
         except mysql.connector.Error as err:
             logging.error(f"Create models table error: {err}")
-            raise
+            self.reconnect()
+            self.reconnect()
+        finally:
+            self.cursor.nextset()
+
 
 
     def get_models_list(self):
@@ -620,9 +691,10 @@ class Database:
             return self.cursor.fetchall()
         except mysql.connector.Error as err:
             logging.error(f"Get models list error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
+
 
 
     def check_model_exists(self, model_name):
@@ -645,9 +717,10 @@ class Database:
             return self.cursor.fetchone() is not None
         except mysql.connector.Error as err:
             logging.error(f"Check model exists error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
+
 
 
     def update_chat_model(self, chat_id, model_id):
@@ -668,9 +741,10 @@ class Database:
             self.connection.commit()
         except mysql.connector.Error as err:
             logging.error(f"Update chat model error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
+
 
 
     def get_model_infos(self, model_id):
@@ -698,9 +772,10 @@ class Database:
             return self.cursor.fetchone()
         except mysql.connector.Error as err:
             logging.error(f"Get model infos error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
+
 
     def get_chat_messages(self, chat_id, user_id):
         """
@@ -728,7 +803,7 @@ class Database:
             return self.cursor.fetchall()
         except mysql.connector.Error as err:
             logging.error(f"Get model infos error: {err}")
-            raise
+            self.reconnect()
         finally:
             self.cursor.nextset()
 
