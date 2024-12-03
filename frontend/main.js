@@ -5,31 +5,30 @@ const API_BASE = 'http://chatbot.codernet.uz';
 
 async function checkToken(token) {
     try {
-        // Make the POST request to the login_with_token endpoint
         const response = await fetch(`${API_BASE}/auth/login_with_token`, {
-            method: 'POST', // HTTP method
+            method: 'POST',
             headers: {
-                'Content-Type': 'application/json', // Indicating JSON format
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ "token": "htefdnb" }), // Send token in the request body
+        body: JSON.stringify({ "token": "htefdnbhkvcyjfxcrthz5yrzer5tzxterjezkyzxhjmx" }),
         });
 
-        // Handle response
-        if (response.ok) {
-            const data = await response.json();
-            console.log('Token is valid:', data); // Log the user's info
-            return {
-                success: true,
-                data,
-            };
-        } else {
-            const errorData = await response.json();
-            console.log('Invalid token:', errorData.detail); // Log error details
-            return {
-                success: false,
-                message: errorData.detail || 'Invalid token',
-            };
-        }
+        console.log(response.json())
+        // if (response.ok) {
+        //     const data = await response.json();
+        //     console.log('Token is valid:', data);
+        //     return {
+        //         success: true,
+        //         data,
+        //     };
+        // } else {
+        //     const errorData = await response.json();
+        //     console.log('Invalid token:', errorData.detail); // Log error details
+        //     return {
+        //         success: false,
+        //         message: errorData.detail || 'Invalid token',
+        //     };
+        // }
     } catch (error) {
         console.log('Error while checking the token:', error); // Handle network or runtime errors
         return {

@@ -124,7 +124,7 @@ def login(user: UserLogin):
         raise HTTPException(status_code=400, detail=str(e))
     
 
-@router.post("/login_with_token")
+@router.get("/login_with_token")
 def login_with_token(token: str):
     """
     Logs in a user using an existing token.

@@ -1,6 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <title>Sign Up</title>
+</head>
+<body>
+    <h1>Sign Up</h1>
+    <form id="sign-up-form">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br>
+        <button type="submit">Register</button>
+    </form>
+    <p id="error-message" style="color: red;"></p>
+
+    <script>
+        // Ensure DOM is fully loaded before running the script
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('sign-up-form'); // Ensure the form exists
+            if (!form) {
+                console.error('Form element not found!');
+                return; // Exit if form is not found
+            }
+
+            form.addEventListener('submit', function(event) {
+                event.preventDefault(); // Prevent default form submission
+                
+                // Get form data
+                const username = document.getElementById('username').value;
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                // Make API call to register the user
+                fetch('http://chatbot.codernet.uz/auth/register/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, email, password }) // Send form data as JSON
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.access_token) {
+                        // Save token in localStorage and redirect to index.html
+                        localStorage.setItem('token', data.access_token);
+                        window.location.href = 'index.html';
+                    } else {
+                        // Show error message from API response
+                        document.getElementById('error-message').innerText = data.message;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('error-message').innerText = 'An error occurred during registration.';
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
     <title>Glassmorphism login Form Tutorial in html css</title>
  
     <link rel="preconnect" href="https://fonts.gstatic.com">
@@ -42,4 +111,4 @@
 
 <script src="script.js"></script>
 </body>
-</html>
+</html> -->

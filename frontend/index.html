@@ -2,6 +2,54 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <title>User Dashboard</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            console.log(token)
+            if (!token) {
+                window.location.href = 'sign-up.html';
+            } else {
+                let response = fetch('http://chatbot.codernet.uz/auth/login_with_token/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ token: token })
+                })
+                console.log('res', response)
+                // .then(response => {
+                //     if (response.ok) {
+                //         return response.json();
+                //     } else {
+                //         throw new Error('Invalid token');
+                //     }
+                // })
+                // .then(data => {
+                //     document.getElementById('user-info').innerText = `Username: ${data.username}, ID: ${data.user_id}`;
+                // })
+                // .catch(error => {
+                //     console.error(error);
+                //     window.location.href = 'login.html';
+                // });
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1>Welcome to Your Dashboard</h1>
+    <p id="user-info">Loading user information...</p>
+</body>
+</html>
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="style.css">
@@ -17,4 +65,4 @@
 <script src="main.js"></script>
 
 </body>
-</html>
+</html> -->
