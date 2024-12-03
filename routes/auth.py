@@ -90,16 +90,16 @@ def register(user: UserCreate):
         if db.check_username_exists(username):
             return {"message": "Username already exists."}
 
-        token = generate_token()
+        access_token = generate_token()
         user_id = db.register_user(username=username,
                                    email=email,
                                    password=password,
                                    surname=surname,
                                    name=name,
                                    api_key=api_key,
-                                   token=token)
+                                   access_token=access_token)
 
-        return {"user_id": user_id, "access_token": token}
+        return {"user_id": user_id, "access_token": access_token}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -122,35 +122,46 @@ def login(user: UserLogin):
     How it works:
         1. Fetches the user from the database by matching the `username` and `password`.
         2. If a match is found, generates a new access token and updates it in the database.
-        3. Returns the user ID and access token.
+        3. Returns the user data and new access token.
 
     Example:
 
         >>> user_data = {"username": "john_doe", "password": "secure123"}
         >>> response = login(UserLogin(**user_data))
         >>> response
-        {"user_id": 1, "access_token": "new_random_token"}
+        >>> {"id": 1433,
+        >>> "username": "john_doe",
+        >>> "name": "John",
+        >>> "surname": "Doe",
+        >>> "api_key": "sk_.....",
+        >>> "phone_number": "DATE" or null,
+        >>> "last_login": 'DATE"  or null, 
+        >>> "date_joined": "DATETIME",
+        >>> "email": "john@gmail.com",
+        >>> "access_token": "unique acses token"
+        >>> }
     """
     try:
-        db_user = db.login_user(user.username, user.password)
+        user_data = db.login_user(user.username, user.password)
 
-        if not db_user:
+        if not user_data:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect username or password"
             )
         
-        user_id = db_user['id']
-        token = generate_token()
-        db.update_user_token(user_id, token)
-        return {"user_id": user_id, "access_token": token}
-    
+
+        user_data['access_token'] = generate_token()
+
+        db.update_user_token(user_data['id'], user_data['access_token'])
+        user_data.pop('password')
+        return user_data
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
 
-@router.get("/login_with_token")
 @router.post("/login_with_token")
+@router.get("/login_with_token")
 def login_with_token(token: str):
     """
     Logs in a user using an existing token.
@@ -176,15 +187,14 @@ def login_with_token(token: str):
         {"user_id": 1, "username": "john_doe", "access_token": "valid_token"}
     """
     try:
-        db_user = db.login_by_token(token)
-        if not db_user:
+        user_data = db.login_by_token(token)
+        if not user_data:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token"
             )
-        user_id = db_user['id']
-        username = db_user['username']
-        return {"user_id": user_id, "username": username,  "access_token": token}
+        user_data.pop('password')
+        return user_data
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

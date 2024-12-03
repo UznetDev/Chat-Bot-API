@@ -98,19 +98,19 @@ class Database:
         try:
             self.ensure_connection()
             sql = """
-            CREATE TABLE IF NOT EXISTS users (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                username VARCHAR(50) UNIQUE NOT NULL,
-                name VARCHAR(100),
-                surname VARCHAR(100),
-                api_key TEXT,
-                phone_number VARCHAR(20),
-                last_login DATETIME,
-                date_joined DATETIME DEFAULT CURRENT_TIMESTAMP,
-                email VARCHAR(100) UNIQUE NOT NULL,
-                password VARCHAR(255) NOT NULL,
-               access_token VARCHAR(255) UNIQUE
-            )
+                CREATE TABLE IF NOT EXISTS users (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    username VARCHAR(50) UNIQUE NOT NULL,
+                    name VARCHAR(100),
+                    surname VARCHAR(100),
+                    api_key TEXT,
+                    phone_number VARCHAR(20),
+                    last_login DATETIME,
+                    date_joined DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    email VARCHAR(100) UNIQUE NOT NULL,
+                    password VARCHAR(255) NOT NULL,
+                    access_token VARCHAR(255) UNIQUE
+                );
             """
             self.cursor.execute(sql)
         except mysql.connector.Error as err:
@@ -120,7 +120,7 @@ class Database:
             self.cursor.nextset()
 
 
-    def register_user(self, username, email, password, token, surname, name, api_key):
+    def register_user(self, username, email, password, access_token, surname, name, api_key):
         """
         Registers a new user with hashed password and optional token.
 
@@ -148,9 +148,9 @@ class Database:
             self.ensure_connection()
             hashed_password = self.hash_password(password)
             sql = """
-            INSERT INTO users (username, email, password, token, surname, name, api_key) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO users (username, email, password, access_token, surname, name, api_key) VALUES (%s, %s, %s, %s, %s, %s, %s)
             """
-            values = (username, email, hashed_password, token, surname, name, api_key)
+            values = (username, email, hashed_password, access_token, surname, name, api_key)
             self.cursor.execute(sql, values)
             return self.cursor.lastrowid
         except mysql.connector.Error as err:
@@ -630,19 +630,19 @@ class Database:
         """
         try:
             sql = """
-            CREATE TABLE IF NOT EXISTS models (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
-                description TEXT,
-                system TEXT,
-                visibility VARCHAR(30),
-                max_tokens INT,
-                cretor_id INT,
-                admin_acsess BOOLEAN DEFAULT 1,
-                type VARCHAR(255) NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                FOREIGN KEY (cretor_id) REFERENCES users(id)
-            )
+                CREATE TABLE IF NOT EXISTS models (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    description TEXT,
+                    system TEXT,
+                    visibility VARCHAR(30),
+                    max_tokens INT,
+                    creator_id INT,
+                    admin_access BOOLEAN DEFAULT 1,
+                    type VARCHAR(255) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (creator_id) REFERENCES users(id)
+                );
             """
             self.cursor.execute(sql)
             self.connection.commit()
