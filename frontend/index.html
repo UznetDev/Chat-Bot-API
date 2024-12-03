@@ -10,28 +10,23 @@
             if (!token) {
                 window.location.href = 'sign-up.html';
             } else {
-                let response = fetch('http://chatbot.codernet.uz/auth/login_with_token/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ token: token })
+                let api_url = `http://chatbot.codernet.uz/auth/login_with_token?token=` + token
+                console.log(api_url)
+                let response = fetch(api_url)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Invalid token');
+                    }
                 })
-                console.log('res', response)
-                // .then(response => {
-                //     if (response.ok) {
-                //         return response.json();
-                //     } else {
-                //         throw new Error('Invalid token');
-                //     }
-                // })
-                // .then(data => {
-                //     document.getElementById('user-info').innerText = `Username: ${data.username}, ID: ${data.user_id}`;
-                // })
-                // .catch(error => {
-                //     console.error(error);
-                //     window.location.href = 'login.html';
-                // });
+                .then(data => {
+                    document.getElementById('user-info').innerText = `Username: ${data.username}, ID: ${data.user_id}`;
+                })
+                .catch(error => {
+                    console.error(error);
+                    window.location.href = 'login.html';
+                });
             }
         });
     </script>

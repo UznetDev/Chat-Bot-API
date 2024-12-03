@@ -3,53 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <title>Sign Up</title>
+ 
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+    <link href="./style.css" rel="stylesheet">
 </head>
 <body>
-    <h1>Sign Up</h1>
-    <form id="sign-up-form">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br>
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required><br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br>
-        <button type="submit">Register</button>
-    </form>
-    <p id="error-message" style="color: red;"></p>
+        <div class="background">
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+        <form id="sign_form">
+            <h3>Sign Up Here</h3>
+    
+            <label for="Email"> Email</label>
+            <input type="email" placeholder="email" id="email" required>
+    
+            <label for="username">Username</label>
+            <input type="text" placeholder="username" id="username" required>
+    
+            <label for="Password">Password</label>
+            <input type="password" placeholder="Password" id="password" required>
+    
+            <label for="Confirm Password">Password</label>
+            <input type="password" placeholder="Password" id="confirm_password" required>
+    
+            <p id="error-message" style="color: red;"></p>
+    
+            
+            <button type="submit" id="sign_in"> Log In </button>
+
+            <p id="loc">Do you have an account? <a href="login.html">Log In</a></p>
+        </form>
+        
 
     <script>
-        // Ensure DOM is fully loaded before running the script
         document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('sign-up-form'); // Ensure the form exists
+            const form = document.getElementById('sign_form');
             if (!form) {
                 console.error('Form element not found!');
-                return; // Exit if form is not found
+                return;
             }
 
             form.addEventListener('submit', function(event) {
-                event.preventDefault(); // Prevent default form submission
-                
-                // Get form data
+                event.preventDefault();
                 const username = document.getElementById('username').value;
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
 
-                // Make API call to register the user
                 fetch('http://chatbot.codernet.uz/auth/register/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ username, email, password }) // Send form data as JSON
+                    body: JSON.stringify({ username, email, password })
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.access_token) {
-                        // Save token in localStorage and redirect to index.html
                         localStorage.setItem('token', data.access_token);
                         window.location.href = 'index.html';
                     } else {
-                        // Show error message from API response
                         document.getElementById('error-message').innerText = data.message;
                     }
                 })
@@ -62,53 +77,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Glassmorphism login Form Tutorial in html css</title>
- 
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
-    <link href="./style.css" rel="stylesheet">
-
-
-
-</head>
-<body>
-    <div class="background">
-        <div class="shape"></div>
-        <div class="shape"></div>
-    </div>
-    <form id="sign_form">
-        <h3>Login Here</h3>
-
-        <label for="Email"> Email</label>
-        <input type="email" placeholder="email" id="email" required>
-
-        <label for="username">Username</label>
-        <input type="text" placeholder="username" id="username" required>
-
-        <label for="Password">Password</label>
-        <input type="password" placeholder="Password" id="password" required>
-
-        <label for="Confirm Password">Password</label>
-        <input type="password" placeholder="Password" id="confirm_password" required>
-
-       <p id="error_page"></p>
-
-        <input type="submit" id="sign_in" value="Log In">
-        <!-- <div class="social">
-          <div class="go"><i class="fab fa-google"></i>  Google</div>
-          <div class="fb"><i class="fab fa-facebook"></i>  Facebook</div>
-        </div> -->
-    </form>
-
-<script src="script.js"></script>
-</body>
-</html> -->
