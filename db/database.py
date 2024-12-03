@@ -45,12 +45,21 @@ class Database:
                 user=self.user,
                 password=self.password,
                 database=self.database,
+                connection_timeout=30,
                 autocommit=True
             )
             self.cursor = self.connection.cursor(dictionary=True)
         except mysql.connector.Error as err:
             logging.error(f"Database connection error: {err}")
             raise
+    def ensure_connection(self):
+        """
+        Ulanish holatini tekshirish va kerak bo'lsa qayta ulanish.
+        """
+        if not self.connection.is_connected():
+            logging.warning("Connection lost, reconnecting...")
+            self.reconnect()
+
 
     # ========================= User Management =========================
     def create_user_table(self):
@@ -66,6 +75,7 @@ class Database:
             - date: DATETIME (Default: CURRENT_TIMESTAMP)
         """
         try:
+            self.ensure_connection()
             sql = """
             CREATE TABLE IF NOT EXISTS users (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -98,6 +108,7 @@ class Database:
             mysql.connector.Error: If the registration fails.
         """
         try:
+            self.ensure_connection()
             hashed_password = self.hash_password(password)
             sql = """
             INSERT INTO users (username, email, password, token) VALUES (%s, %s, %s, %s)
@@ -124,6 +135,7 @@ class Database:
             mysql.connector.Error: If the login process fails.
         """
         try:
+            self.ensure_connection()
             sql = "SELECT * FROM users WHERE username = %s"
             self.cursor.execute(sql, (username,))
             user = self.cursor.fetchone()
@@ -148,6 +160,7 @@ class Database:
             mysql.connector.Error: If the operation fails.
         """
         try:
+            self.ensure_connection()
             sql = "SELECT * FROM users WHERE username = %s"
             self.cursor.execute(sql, (username,))
             return self.cursor.fetchone() is not None
@@ -169,6 +182,7 @@ class Database:
             mysql.connector.Error: If the operation fails.
         """
         try:
+            self.ensure_connection()
             sql = "SELECT * FROM users WHERE email = %s"
             self.cursor.execute(sql, (email,))
             return self.cursor.fetchone() is not None
@@ -190,6 +204,7 @@ class Database:
             mysql.connector.Error: If the operation fails.
         """
         try:
+            self.ensure_connection()
             sql = "SELECT * FROM users WHERE token = %s"
             self.cursor.execute(sql, (token,))
             return self.cursor.fetchone()
@@ -559,6 +574,7 @@ class Database:
             mysql.connector.Error: If the query fails.
         """
         try:
+            self.ensure_connection()
             sql = "SELECT * FROM models"
             self.cursor.execute(sql)
             return self.cursor.fetchall()

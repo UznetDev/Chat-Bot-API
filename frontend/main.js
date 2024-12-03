@@ -1,5 +1,7 @@
-const BASE_API = 'http://chatbot.codernet.uz'
+const BASE_API = 'http://chatbot.codernet.uz';
 const token = localStorage.getItem('token');
+let model_name = 'gpt-4o-mini';
+let model_id = 1;
 
 document.addEventListener('DOMContentLoaded', function() {
     
@@ -49,7 +51,6 @@ async function fetchModels() {
         const data = await response.json();
         console.log(data)
         if (data.status === 200 && data.models) {
-            console.log('models', data.models.name)
             populateDropdown(data.models);
         } else {
             console.error('Invalid response:', data);
@@ -59,15 +60,16 @@ async function fetchModels() {
     }
 }
 
-// Populate dropdown with models
 function populateDropdown(models) {
     models.forEach(model => {
         const button = document.createElement('button');
-        button.textContent = model;
+        button.textContent = model.name;
         button.addEventListener('click', () => {
-            console.log(`Selected Model: ${model}`);
-            dropdownMenu.style.display = 'none'; // Close dropdown after selection
-            dropdownButton.textContent = model; // Update button text to selected model
+            console.log(`Selected Model: ${model.name}`);
+            dropdownMenu.style.display = 'none'; 
+            dropdownButton.textContent = model.name;
+            model_id = model.id
+            model_name = model.name
         });
         dropdownMenu.appendChild(button);
     });
@@ -78,6 +80,4 @@ dropdownButton.addEventListener('click', () => {
     const isVisible = dropdownMenu.style.display === 'block';
     dropdownMenu.style.display = isVisible ? 'none' : 'block';
 });
-
-// Initialize
 fetchModels();
