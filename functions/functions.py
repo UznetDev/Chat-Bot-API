@@ -1,7 +1,7 @@
 import random
 import string
 
-def generate_token(length=200):
+def generate_token(length=50):
     """
     Generates a random token consisting of Latin letters (both uppercase and lowercase)
     and digits. The token will have a length specified by the 'length' parameter.

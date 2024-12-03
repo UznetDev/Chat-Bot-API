@@ -125,6 +125,7 @@ def login(user: UserLogin):
     
 
 @router.get("/login_with_token")
+@router.post("/login_with_token")
 def login_with_token(token: str):
     """
     Logs in a user using an existing token.

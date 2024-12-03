@@ -1,37 +1,70 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Glassmorphism login Form Tutorial in html css</title>
- 
-    <link rel="preconnect" href="https://fonts.gstatic.com">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
-    <style media="screen">
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Chat with Chan</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+      }
+      .chatbox {
+        height: 400px;
+        overflow: auto;
+        border: 1px solid #ccc;
+        padding: 10px;
+      }
+      .message {
+        margin-bottom: 10px;
+      }
+      .user {
+        color: blue;
+      }
+      .bot {
+        color: green;
+      }
+      input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Chat with Chan</h1>
+    <div class="chatbox" id="chatbox"></div>
+    <input type="text" id="message" placeholder="Type your message here...">
+    <button id="send">Send</button>
+    <script>
+      var chatbox = document.getElementById("chatbox");
+      var message = document.getElementById("message");
+      var send = document.getElementById("send");
+      
+      send.addEventListener("click", function() {
+        var userMessage = message.value;
+        var userDiv = document.createElement("div");
+        userDiv.className = "message user";
+        userDiv.innerHTML = "<strong>You:</strong> " + userMessage;
+        chatbox.appendChild(userDiv);
+        
+        message.value = "";
+        
+        fetch("/get_response?message=" + encodeURIComponent(userMessage))
+          .then(function(response) {
+            return response.text();
+          })
+          .then(function(botMessage
+          ) {
+            var botDiv = document.createElement("div");
+            botDiv.className = "message bot";
+            botDiv.innerHTML = "<strong>Chan:</strong> " + botMessage;
+            chatbox.appendChild(botDiv);
+            
+            chatbox.scrollTop = chatbox.scrollHeight;
+        });
+        });
+    </script>
 
-
-</style>
-</head>
-<body>
-    <div class="background">
-        <div class="shape"></div>
-        <div class="shape"></div>
-    </div>
-    <form>
-        <h3>Login Here</h3>
-
-        <label for="username">Username</label>
-        <input type="text" placeholder="username" id="username" required>
-
-        <label for="password">Password</label>
-        <input type="password" placeholder="Password" id="password" required>
-
-        <button id="log_in", onclick="login()">Log In</button>
-        <!-- <div class="social">
-          <div class="go"><i class="fab fa-google"></i>  Google</div>
-          <div class="fb"><i class="fab fa-facebook"></i>  Facebook</div>
-        </div> -->
-    </form>
-
-<script src="script.js"></script>
-</body>
+    </body>
 </html>

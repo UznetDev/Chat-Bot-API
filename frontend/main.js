@@ -1,51 +1,83 @@
-const tokenData = JSON.parse(localStorage.getItem('access_token')).token;
+const BASE_API = 'http://chatbot.codernet.uz'
+const token = localStorage.getItem('token');
 
-const API_BASE = 'http://chatbot.codernet.uz';
-
-
-async function checkToken(token) {
-    try {
-        const response = await fetch(`${API_BASE}/auth/login_with_token`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        body: JSON.stringify({ "token": "htefdnbhkvcyjfxcrthz5yrzer5tzxterjezkyzxhjmx" }),
+document.addEventListener('DOMContentLoaded', function() {
+    
+    if (!token) {
+        window.location.href = 'sign-up.html';
+    } else {
+        let api_url = `${BASE_API}/auth/login_with_token?token=` + token
+        let response = fetch(api_url)
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Invalid token');
+            }
+        })
+        .then(data => {
+            // document.getElementById('user-info').innerText = `Username: ${data.username}, ID: ${data.user_id}`;
+        })
+        .catch(error => {
+            console.error(error);
+            window.location.href = 'login.html';
         });
+    }
+});
 
-        console.log(response.json())
-        // if (response.ok) {
-        //     const data = await response.json();
-        //     console.log('Token is valid:', data);
-        //     return {
-        //         success: true,
-        //         data,
-        //     };
-        // } else {
-        //     const errorData = await response.json();
-        //     console.log('Invalid token:', errorData.detail); // Log error details
-        //     return {
-        //         success: false,
-        //         message: errorData.detail || 'Invalid token',
-        //     };
-        // }
+const textarea = document.getElementById('message-input');
+
+textarea.addEventListener('input', () => {
+    textarea.style.height = 'auto'; 
+    textarea.style.height = `${textarea.scrollHeight}px`;
+});
+
+
+const models_api = `${BASE_API}/promts/get_models?token=${token}`;
+console.log(models_api)
+
+const dropdownButton = document.getElementById('dropdownButton');
+const dropdownMenu = document.getElementById('dropdownMenu');
+
+async function fetchModels() {
+    try {
+        const response = await fetch(models_api);
+        if (!response.ok) {
+            throw new Error('Failed to fetch models');
+        }
+        console.log(response)
+        const data = await response.json();
+        console.log(data)
+        if (data.status === 200 && data.models) {
+            console.log('models', data.models.name)
+            populateDropdown(data.models);
+        } else {
+            console.error('Invalid response:', data);
+        }
     } catch (error) {
-        console.log('Error while checking the token:', error); // Handle network or runtime errors
-        return {
-            success: false,
-            message: 'An error occurred while checking the token.',
-        };
+        console.error('Error fetching models:', error);
     }
 }
 
+// Populate dropdown with models
+function populateDropdown(models) {
+    models.forEach(model => {
+        const button = document.createElement('button');
+        button.textContent = model;
+        button.addEventListener('click', () => {
+            console.log(`Selected Model: ${model}`);
+            dropdownMenu.style.display = 'none'; // Close dropdown after selection
+            dropdownButton.textContent = model; // Update button text to selected model
+        });
+        dropdownMenu.appendChild(button);
+    });
+}
 
-checkToken(tokenData).then((result) => {
-    if (result.success) {
-        // Token is valid
-        console.log('User Info:', result.data);
-    } else {
-        // Token is invalid or an error occurred
-        console.log('Error:', result.message);
-    }
+// Show or hide dropdown menu on button click
+dropdownButton.addEventListener('click', () => {
+    const isVisible = dropdownMenu.style.display === 'block';
+    dropdownMenu.style.display = isVisible ? 'none' : 'block';
 });
-console.log(tokenData);
+
+// Initialize
+fetchModels();

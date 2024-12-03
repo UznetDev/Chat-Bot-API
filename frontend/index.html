@@ -2,62 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>User Dashboard</title>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const token = localStorage.getItem('token');
-            console.log(token)
-            if (!token) {
-                window.location.href = 'sign-up.html';
-            } else {
-                let api_url = `http://chatbot.codernet.uz/auth/login_with_token?token=` + token
-                console.log(api_url)
-                let response = fetch(api_url)
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    } else {
-                        throw new Error('Invalid token');
-                    }
-                })
-                .then(data => {
-                    document.getElementById('user-info').innerText = `Username: ${data.username}, ID: ${data.user_id}`;
-                })
-                .catch(error => {
-                    console.error(error);
-                    window.location.href = 'login.html';
-                });
-            }
-        });
-    </script>
-</head>
-<body>
-    <h1>Welcome to Your Dashboard</h1>
-    <p id="user-info">Loading user information...</p>
-</body>
-</html>
-
-
-
-
-
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Sticky Input</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h2>Welcome to the Dashboard</h2>
-        <p>You have successfully logged in.</p>
-        <button id="logout">Logout</button>
+    <div class="content">
+        <p>Bu yerda har qanday kontent bo'lishi mumkin. Kiritish maydoni faqat pastda qoladi va boshqa elementlarga ta'sir qilmaydi.</p>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus nec iaculis mauris.</p>
+
+
+        <div class="dropdown-container">
+            <button id="dropdownButton">Select Model</button>
+            <div class="dropdown-menu" id="dropdownMenu">
+                <!-- Model nomlari dinamik ravishda JS orqali qo'shiladi -->
+            </div>
+        </div>
+        
     </div>
 
+    <div class="input-container">
+        <textarea id="message-input" placeholder="Message"></textarea>
+        <button id="send-button">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 96 960 960" width="24">
+                <path d="M120 936V696l320-120-320-120V216l720 360-720 360Z"/>
+            </svg>
+        </button>
+    </div>
 
-<script src="main.js"></script>
-
+    <script src="main.js"></script>
 </body>
-</html> -->
+</html>
