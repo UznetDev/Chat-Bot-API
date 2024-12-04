@@ -4,10 +4,12 @@ from data.config import OPENAI_API_KEY
 
 class Models:
     def __init__(self):
-        self.client = OpenAI(api_key=OPENAI_API_KEY)
+        pass
+        # self.client = OpenAI(api_key=OPENAI_API_KEY)
 
-    def get_answer(self, prompt, model: str):
+    def get_answer(self, prompt, model: str, api_key):
         try:
+            self.client = OpenAI(api_key=api_key)
             response = self.client.chat.completions.create(
                 model=model,
                 messages=prompt

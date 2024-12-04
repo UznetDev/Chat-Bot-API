@@ -162,12 +162,12 @@ def login(user: UserLogin):
 
 @router.post("/login_with_token")
 @router.get("/login_with_token")
-def login_with_token(token: str):
+def login_with_token(access_token: str):
     """
     Logs in a user using an existing token.
 
     Parameters:
-        token (str): The access token to authenticate the user.
+        access_token (str): The access token to authenticate the user.
 
     Returns:
         dict: A dictionary containing the user's ID, username, and the access token.
@@ -187,7 +187,7 @@ def login_with_token(token: str):
         {"user_id": 1, "username": "john_doe", "access_token": "valid_token"}
     """
     try:
-        user_data = db.login_by_token(token)
+        user_data = db.login_by_token(access_token)
         if not user_data:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

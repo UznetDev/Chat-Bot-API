@@ -444,6 +444,20 @@ class Database:
             self.cursor.nextset()
 
 
+    def update_chat_name(self, chat_id, name):
+        """"""
+        try:
+            self.ensure_connection()
+            sql = "UPDATE chats SET name = %s WHERE id = %s"
+            self.cursor.execute(sql, (name, chat_id))
+            self.connection.commit()
+        except mysql.connector.Error as err:
+            logging.error(f"Update chat model error: {err}")
+            self.reconnect()
+        finally:
+            self.cursor.nextset()
+
+
 
     def save_chat_message(self, chat_id, user_id, role, content, model_id):
         """
@@ -630,17 +644,17 @@ class Database:
         """
         try:
             sql = """
-                CREATE TABLE IF NOT EXISTS models (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    name VARCHAR(255) NOT NULL,
-                    description TEXT,
-                    system TEXT,
-                    visibility VARCHAR(30),
-                    max_tokens INT,
-                    creator_id INT,
-                    admin_access BOOLEAN DEFAULT 1,
-                    type VARCHAR(255) NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CREATE TABLE IF NOT EXISTS `models` (
+                    `id` INT AUTO_INCREMENT PRIMARY KEY,
+                    `name` VARCHAR(255) NOT NULL,
+                    `description` TEXT,
+                    `system` TEXT,
+                    `visibility` BOOLEAN DEFAULT 0,
+                    `max_tokens` INT,
+                    `creator_id` INT,
+                    `admin_access` BOOLEAN DEFAULT 1,
+                    `type` VARCHAR(255) NOT NULL,
+                    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (creator_id) REFERENCES users(id)
                 );
             """
@@ -649,15 +663,15 @@ class Database:
 
             # Add default models
             models = [
-                ("gpt-4o-mini", "More capable than any GPT-3.5 model, optimized for chat. Updated with the latest iteration.", "chat"),
-                ("gpt-3.5-turbo", "Most capable GPT-3.5 model, optimized for chat at 1/10th the cost of text-davinci-003.", "chat"),
-                ("gpt-4", "More capable than any GPT-3.5 model, optimized for complex tasks and chat.", "chat"),
+                ("gpt-4o-mini", "More capable than any GPT-3.5 model, optimized for chat. Updated with the latest iteration.", "chat", 1),
+                ("gpt-3.5-turbo", "Most capable GPT-3.5 model, optimized for chat at 1/10th the cost of text-davinci-003.", "chat", 1),
+                ("gpt-4", "More capable than any GPT-3.5 model, optimized for complex tasks and chat.", "chat", 1),
             ]
 
             for model in models:
                 self.cursor.execute("SELECT * FROM models WHERE name = %s", (model[0],))
                 if self.cursor.fetchone() is None:
-                    self.cursor.execute("INSERT INTO models (name, description, type) VALUES (%s, %s, %s)", model)
+                    self.cursor.execute("INSERT INTO models (name, description, type) VALUES (%s, %s, %s, %s)", model)
                     self.connection.commit()
         except mysql.connector.Error as err:
             logging.error(f"Create models table error: {err}")
@@ -668,7 +682,7 @@ class Database:
 
 
 
-    def get_models_list(self):
+    def get_models_list(self, user_id):
         """
         Retrieves a list of all AI models available in the database.
 
@@ -686,8 +700,8 @@ class Database:
         try:
             self.ensure_connection()
             self.ensure_connection()
-            sql = "SELECT * FROM models"
-            self.cursor.execute(sql)
+            sql = "SELECT * FROM models WHERE creator_id = %s or visibility=1"
+            self.cursor.execute(sql, (user_id, ))
             return self.cursor.fetchall()
         except mysql.connector.Error as err:
             logging.error(f"Get models list error: {err}")
@@ -747,7 +761,7 @@ class Database:
 
 
 
-    def get_model_infos(self, model_id):
+    def get_model_infos(self, name, user_id):
         """
         Retrieves detailed information about a specific model.
 
@@ -767,14 +781,15 @@ class Database:
         """
         try:
             self.ensure_connection()
-            sql = "SELECT * FROM models WHERE id = %s"
-            self.cursor.execute(sql, (model_id,))
+            sql = "SELECT * FROM models WHERE name = %s and (creator_id = %s or visibility=1)"
+            self.cursor.execute(sql, (name, user_id))
             return self.cursor.fetchone()
         except mysql.connector.Error as err:
             logging.error(f"Get model infos error: {err}")
             self.reconnect()
         finally:
             self.cursor.nextset()
+
 
 
     def get_chat_messages(self, chat_id, user_id):

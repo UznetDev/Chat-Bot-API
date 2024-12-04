@@ -8,12 +8,12 @@ router = APIRouter()
 
 @router.post("/get_chats")
 @router.get("/get_chats")
-def get_chat_list(token: str):
+def get_chat_list(access_token: str):
     """
     Retrieves a list of chats for the authenticated user.
 
     Parameters:
-        token (str): The authentication token to verify the user's identity.
+        access_token (str): The authentication token to verify the user's identity.
 
     Returns:
         dict: A dictionary containing a list of the user's chats, each with details such as:
@@ -36,7 +36,7 @@ def get_chat_list(token: str):
         HTTPException: {"status_code": 404, "detail": "User not found"}
     """
     try:
-        user_info = db.login_by_token(token)
+        user_info = db.login_by_token(access_token)
         if user_info is None:
             raise HTTPException(status_code=404, detail="User not found")
         user_id = user_info["id"]
@@ -49,12 +49,12 @@ def get_chat_list(token: str):
 
 @router.post("/get_chat_data")
 @router.get("/get_chat_data")
-def get_chat_data(token: str, chat_id: int):
+def get_chat_data(access_token: str, chat_id: int):
     """
     Retrieves the details of a specific chat for the authenticated user.
 
     Parameters:
-        token (str): The authentication token to verify the user's identity.
+        access_token (str): The authentication token to verify the user's identity.
         chat_id (int): The ID of the chat to retrieve.
 
     Returns:
@@ -76,7 +76,7 @@ def get_chat_data(token: str, chat_id: int):
         HTTPException: {"status_code": 404, "detail": "User not found"}
     """
     try:
-        user_info = db.login_by_token(token)
+        user_info = db.login_by_token(access_token)
         if user_info is None:
             raise HTTPException(status_code=404, detail="User not found")
         user_id = user_info["id"]
@@ -89,7 +89,7 @@ def get_chat_data(token: str, chat_id: int):
 
 @router.post("/create_chat")
 @router.get("/create_chat")
-def create_chat(token: str, model_id=1):
+def create_chat(access_token: str, model_id=1):
     """
     Creates a new chat for the authenticated user.
 
@@ -116,7 +116,7 @@ def create_chat(token: str, model_id=1):
         HTTPException: {"status_code": 404, "detail": "User not found"}
     """
     try:
-        user_info = db.login_by_token(token)
+        user_info = db.login_by_token(access_token)
         if user_info is None:
             raise HTTPException(status_code=404, detail="User not found")
         user_id = user_info["id"]

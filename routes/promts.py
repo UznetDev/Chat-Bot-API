@@ -7,12 +7,12 @@ router = APIRouter()
 
 
 @router.get("/get_models")
-def get_models(token: str):
+def get_models(access_token: str):
     """
     Fetches a list of available models for the authenticated user.
 
     Parameters:
-        token (str): The authentication token to verify the user's identity.
+        access_token (str): The authentication token to verify the user's identity.
 
     Returns:
         dict: A dictionary containing the status code and a list of models.
@@ -38,18 +38,18 @@ def get_models(token: str):
         HTTPException: {"status_code": 401, "detail": "Invalid token"}
     """
     try:
-        check_token = db.login_by_token(token) is None
-        if check_token:
+        user_data = db.login_by_token(access_token)
+        if user_data is None:
             return HTTPException(status_code=401, detail="Invalid token")
-        
-        models = db.get_models_list()
+        user_id = user_data['id']
+        models = db.get_models_list(user_id)
         return {"status": 200, "models": models}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/answer")
-def get_answer(question: str, chat_id: int, token: str, model_id=None):
+def get_answer(question: str, chat_id: int, access_token: str, model_name: str):
     """
     Retrieves an AI-generated answer based on the user's question, chat history, and the specified model.
 
@@ -103,23 +103,23 @@ def get_answer(question: str, chat_id: int, token: str, model_id=None):
         HTTPException: {"status_code": 401, "detail": "Invalid token"}
     """
     try:
-        user_info = db.login_by_token(token)
+        user_info = db.login_by_token(access_token)
         user_id = user_info['id']
         chat_info = db.get_chat_info(chat_id, user_id)
         if chat_info is None:
             raise HTTPException(status_code=404, detail="Chat not found")
         
-        if model_id is None:
-            model_id = chat_info['model_id']
-        model_info = db.get_model_infos(model_id)
+        if chat_info['name'] == "Unknown":
+            db.update_chat_name(chat_id=chat_id, name=question)
+
+        model_info = db.get_model_infos(model_name, user_id)
         if model_info is None:
             raise HTTPException(status_code=404, detail="Model not found")
-        model_name = model_info['name']
         
-        if not db.login_by_token(token):
+        if not db.login_by_token(access_token):
             raise HTTPException(status_code=401, detail="Invalid token")
         
-        db.update_chat_model(chat_id=chat_id, model_id=model_id)
+        db.update_chat_model(chat_id=chat_id, model_id=model_info['id'])
 
 
         chat_history = db.get_chat_messages(chat_id, user_id)
@@ -127,12 +127,12 @@ def get_answer(question: str, chat_id: int, token: str, model_id=None):
             chat_history = []
         
         chat_count = len(chat_history)
-        if chat_count > 20:
+        if chat_count > 200:
             raise HTTPException(status_code=404, detail="Limit used up")
 
         promts = model.create_promts(question, chat_history)
 
-        db.save_chat_message(chat_id=chat_id, user_id=user_id, content=question, role='user', model_id=model_id)
+        db.save_chat_message(chat_id=chat_id, user_id=user_id, content=question, role='user', model_id=model_info['id'])
 
         answer = """
 Here's a simple Python code to print "Hello, World!":
@@ -146,9 +146,29 @@ This is the standard way to output "Hello, World!" in Python. Let me know if you
         
         #model.get_answer(promts, model_name)
 
-        db.save_chat_message(chat_id=chat_id, user_id=user_id, content=answer, role="assistant", model_id=model_id)
+        db.save_chat_message(chat_id=chat_id, user_id=user_id, content=answer, role="assistant", model_id=model_info['id'])
         
         return {"status": 200, "answer": answer}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/get_model_info")
+def get_model_info(model_name: str, access_token: str):
+
+    """
+    
+    """
+    try:
+        user_data = db.login_by_token(access_token)
+        if user_data is None:
+            return HTTPException(status_code=401, detail="Invalid token")
+        user_id = user_data['id']
+        data = db.get_model_infos(model_name, user_id)
+        if data is None:
+            raise HTTPException(status_code=404, detail="Model not found")
+        return {"status": 200, "model_data": data}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
