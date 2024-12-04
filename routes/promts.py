@@ -1,7 +1,9 @@
 from fastapi import HTTPException
 from loader import db, model
-from fastapi import APIRouter
-
+from fastapi import File, Form, UploadFile, APIRouter
+import shutil
+from data.config import VECTOR_STORAGE_DIR
+import openai
 
 router = APIRouter()
 
@@ -112,7 +114,7 @@ def get_answer(question: str, chat_id: int, access_token: str, model_name: str):
         if chat_info['name'] == "Unknown":
             db.update_chat_name(chat_id=chat_id, name=question)
 
-        model_info = db.get_model_infos(model_name, user_id)
+        model_info = db.get_model_infos(user_id=user_id, model_name=model_name)
         if model_info is None:
             raise HTTPException(status_code=404, detail="Model not found")
         
@@ -134,19 +136,23 @@ def get_answer(question: str, chat_id: int, access_token: str, model_name: str):
 
         db.save_chat_message(chat_id=chat_id, user_id=user_id, content=question, role='user', model_id=model_info['id'])
 
-        answer = """
-Here's a simple Python code to print "Hello, World!":
+#         answer = """
+# Here's a simple Python code to print "Hello, World!":
 
-```python
-print("Hello, World!")
-```
+# ```python
+# print("Hello, World!")
+# ```
 
-This is the standard way to output "Hello, World!" in Python. Let me know if you'd like variations or something more!
-"""
+# This is the standard way to output "Hello, World!" in Python. Let me know if you'd like variations or something more!
+# """
         
-        #model.get_answer(promts, model_name)
+        answer = model.get_answer(api_key=user_info['api_key'], prompt=promts, model_data=model_info)
 
-        db.save_chat_message(chat_id=chat_id, user_id=user_id, content=answer, role="assistant", model_id=model_info['id'])
+        db.save_chat_message(chat_id=chat_id, 
+                             user_id=user_id, 
+                             content=answer, 
+                             role="assistant", 
+                             model_id=model_info['id'])
         
         return {"status": 200, "answer": answer}
 
@@ -172,3 +178,59 @@ def get_model_info(model_name: str, access_token: str):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+
+
+
+
+@router.post("/upload/")
+@router.get("/upload/")
+async def upload_file(file: UploadFile = File(...), 
+                      model_name: str = Form(...), 
+                      description: str = Form(...),
+                      system: str = Form(...),
+                      visibility: bool = Form(...),
+                      max_tokens: int = Form(...),
+                      access_token: str = Form(...)):
+    try:
+        """
+        
+        """
+
+        if not file.filename.endswith(".pdf"):
+            return HTTPException(status_code=400, detail="Invalid file format. Only PDF files are allowed.")
+        user_data = db.login_by_token(access_token)
+        if user_data is None:
+            return HTTPException(status_code=401, detail="Invalid token")
+        
+        save_path = f"{VECTOR_STORAGE_DIR}/{model_name}.pdf"
+        with open(save_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        user_id = user_data['id']
+        
+        doc_id = model.add_document(pdf_path=save_path, document_name=model_name, api_key=user_data['api_key'])
+
+        save_db = db.insert_model(name=model_name, 
+                                  description=description,
+                                  system=system,
+                                  visibility=visibility,
+                                  max_tokens=max_tokens,
+                                  creator_id=user_id,
+                                  model_type='rag_model',
+                                  doc_id=doc_id)
+        if save_db is None:
+            return HTTPException(status_code=401, detail="Moodel building fail in save to db")
+
+        if doc_id is not None:
+            return {"status_code": 200, "doc_id": doc_id}
+        else:
+            return HTTPException(status_code=401, detail="Moodel building fail in embedding")
+    except openai.AuthenticationError as e:
+        return HTTPException(status_code=401, detail=e.message)
+    except Exception as err:
+        return HTTPException(status_code=401, detail=str(err))
+        
+

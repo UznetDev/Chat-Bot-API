@@ -696,6 +696,7 @@ class Database:
                     `creator_id` INT,
                     `admin_access` BOOLEAN DEFAULT 1,
                     `type` VARCHAR(255) NOT NULL,
+                    `doc_id` VARCHAR(255),
                     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (creator_id) REFERENCES users(id)
                 );
@@ -713,7 +714,7 @@ class Database:
             for model in models:
                 self.cursor.execute("SELECT * FROM models WHERE name = %s", (model[0],))
                 if self.cursor.fetchone() is None:
-                    self.cursor.execute("INSERT INTO models (name, description, type) VALUES (%s, %s, %s, %s)", model)
+                    self.cursor.execute("INSERT INTO models (name, description, type, visibility) VALUES (%s, %s, %s, %s)", model)
                     self.connection.commit()
         except mysql.connector.Error as err:
             logging.error(f"Create models table error: {err}")
@@ -721,6 +722,80 @@ class Database:
             self.reconnect()
         finally:
             self.cursor.nextset()
+
+
+    def insert_model(self,
+                     name: str, 
+                     description: str, 
+                     system: str, 
+                     visibility: bool, 
+                     max_tokens: int, 
+                     creator_id: int,  
+                     doc_id: str,
+                     model_type: str):
+        """ 
+        Inserts a new AI model into the database.
+
+        Args:
+            name (str): The name of the model.
+            description (str): The description of the model.
+            type (str): The type of the model.
+            system (str): The system prompt for the model.
+            visibility (bool): The visibility of the model.
+            max_tokens (int): The maximum token limit for the model.
+            creator_id (int): The ID of the user who created the model.
+            doc_id (str): The ID of the document associated with the model.
+
+        Example:
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> db.insert_model("custom-model", "A custom model for specific tasks.", "chat", "You are a helpful assistant.", True, 1000, 1, "doc123")
+
+        Raises:
+            mysql.connector.Error: If the model insertion fails.
+        """
+        try:
+            sql = """INSERT INTO  `models` (`name`, `description`, `type`, `system`, `visibility`, `max_tokens`, `creator_id`, `doc_id`)
+                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
+            values = (name, description, model_type, system, visibility, max_tokens, creator_id, doc_id)
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return True
+        except mysql.connector.Error as err:
+            logging.error(f"Insert model error: {err}")
+            self.reconnect()
+        finally:
+            self.cursor.nextset()
+
+    def update_model(self, model_id: int, name: str, description: str, type: str, system: str, visibility: bool, max_tokens: int, doc_id: str):
+        """
+        Updates an existing AI model in the database.
+
+        Args:
+            model_id (int): The ID of the model to update.
+            name (str): The new name of the model.
+            description (str): The new description of the model.
+            type (str): The new type of the model.
+            system (str): The new system prompt for the model.
+            visibility (bool): The new visibility of the model.
+            max_tokens (int): The new maximum token limit for the model.
+            doc_id (str): The new ID of the document associated with the model.
+
+        Example:
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> db.update_model(1, "updated-model", "An updated model for specific tasks.", "chat", "You are a helpful assistant.", True, 1500, "doc456")
+
+        Raises:
+            mysql.connector.Error: If the model update fails.
+        """
+        try:
+            sql = """UPDATE models
+                     SET name = %s, description = %s, type = %s, system = %s, visibility = %s, max_tokens = %s, doc_id = %s
+                     WHERE id = %s"""
+            values = (name, description, type, system, visibility, max_tokens, doc_id, model_id)
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+        except mysql.connector.Error as err:
+            logging.error(f"Update model error: {err}")
 
 
 
@@ -803,7 +878,7 @@ class Database:
 
 
 
-    def get_model_infos(self, name, user_id):
+    def get_model_infos(self,user_id:int, model_name=None, model_id=None):
         """
         Retrieves detailed information about a specific model.
 
@@ -823,8 +898,12 @@ class Database:
         """
         try:
             self.ensure_connection()
-            sql = "SELECT * FROM models WHERE name = %s and (creator_id = %s or visibility=1)"
-            self.cursor.execute(sql, (name, user_id))
+            if model_name:
+                sql = "SELECT * FROM models WHERE name = %s and (creator_id = %s or visibility=1)"
+                self.cursor.execute(sql, (model_name, user_id))
+            if model_id:
+                sql = "SELECT * FROM models WHERE id = %s and (creator_id = %s or visibility=1)"
+                self.cursor.execute(sql, (model_id, user_id))
             return self.cursor.fetchone()
         except mysql.connector.Error as err:
             logging.error(f"Get model infos error: {err}")

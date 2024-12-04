@@ -1,0 +1,42 @@
+{
+    "d3e8d055-a611-47ca-bb7d-7a1550f6c8b2": {
+        "name": "1",
+        "path": "./document_vectorstores/1.pdf",
+        "vectors_path": "./document_vectorstores/d3e8d055-a611-47ca-bb7d-7a1550f6c8b2"
+    },
+    "9e06fe26-d84b-4253-a60e-e691c82c4173": {
+        "name": "1",
+        "path": "./document_vectorstores/1.pdf",
+        "vectors_path": "./document_vectorstores/9e06fe26-d84b-4253-a60e-e691c82c4173"
+    },
+    "328f2f5a-d6d6-42e7-83e6-a3f6885b2026": {
+        "name": "1",
+        "path": "./document_vectorstores/1.pdf",
+        "vectors_path": "./document_vectorstores/328f2f5a-d6d6-42e7-83e6-a3f6885b2026"
+    },
+    "89121a6e-bcfe-48c1-8894-ad524bc9545e": {
+        "name": "1",
+        "path": "./document_vectorstores/1.pdf",
+        "vectors_path": "./document_vectorstores/89121a6e-bcfe-48c1-8894-ad524bc9545e"
+    },
+    "e64c6b11-2406-4d60-8e01-3a895ad61c9d": {
+        "name": "1",
+        "path": "./document_vectorstores/1.pdf",
+        "vectors_path": "./document_vectorstores/e64c6b11-2406-4d60-8e01-3a895ad61c9d"
+    },
+    "8a7ce053-766b-45a9-ad0e-701a9523e24f": {
+        "name": "1",
+        "path": "./document_vectorstores/1.pdf",
+        "vectors_path": "./document_vectorstores/8a7ce053-766b-45a9-ad0e-701a9523e24f"
+    },
+    "f7e4c544-868d-4699-9428-18fe93b45f05": {
+        "name": "1",
+        "path": "./document_vectorstores/1.pdf",
+        "vectors_path": "./document_vectorstores/f7e4c544-868d-4699-9428-18fe93b45f05"
+    },
+    "af8cc6e5-18ee-4cca-86c2-1be2c897ab4c": {
+        "name": "1",
+        "path": "./document_vectorstores/1.pdf",
+        "vectors_path": "./document_vectorstores/af8cc6e5-18ee-4cca-86c2-1be2c897ab4c"
+    }
+}

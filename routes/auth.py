@@ -13,15 +13,14 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 class UserCreate(BaseModel):
     """
     Data model for user registration.
-    
+
     Attributes:
         username (str): The desired username for the new user.
         email (str): The user's email address.
         password (str): The user's password.
-        surname: (str): The user's Surname.
-        name: (str): The user's Name.
-        api_key: (str): The user's OpenAI API key.
-
+        surname (str): The user's surname.
+        name (str): The user's first name.
+        api_key (str): The user's OpenAI API key.
     """
     username: str
     email: str
@@ -33,12 +32,12 @@ class UserCreate(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
-                    "username": "example_username",
-                    "email": "example@example.com",
-                    "password": "example_password",
-                    "surname": "example_surname",
-                    "name": "example_name",
-                    "api_key": "example_api_key",
+                "username": "example_username",
+                "email": "example@example.com",
+                "password": "example_password",
+                "surname": "example_surname",
+                "name": "example_name",
+                "api_key": "example_api_key",
             }
         }
 
@@ -46,7 +45,7 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     """
     Data model for user login.
-    
+
     Attributes:
         username (str): The username of the user.
         password (str): The password of the user.
@@ -64,20 +63,18 @@ class UserLogin(BaseModel):
 
 
 class UserUpdate(BaseModel):
-
     """
-    Data model for user update.
+    Data model for updating user information.
 
     Attributes:
-        id (int): The ID of the user.
-        access_token (str): The access token of the user.
-        email (str, optional): The new email address for the user.
-        surname (str, optional): The new surname for the user.
-        name (str, optional): The new name for the user.
-        api_key (str, optional): The new OpenAI API key for the user.
-        phone_number (str, optional): The new phone number for the user.
+        id (int): The unique ID of the user.
+        access_token (str): The access token for authentication.
+        email (Optional[str]): The new email address for the user.
+        surname (Optional[str]): The new surname for the user.
+        name (Optional[str]): The new name for the user.
+        api_key (Optional[str]): The new OpenAI API key for the user.
+        phone_number (Optional[str]): The new phone number for the user.
     """
-
     id: int
     access_token: str
     email: Optional[str] = None
@@ -96,9 +93,8 @@ class UserUpdate(BaseModel):
                 "name": "New_Name",
                 "api_key": "new_api_key",
                 "phone_number": "new_phone_number",
-                    }
-                }
-
+            }
+        }
 
 
 @router.post("/register")

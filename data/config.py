@@ -16,3 +16,7 @@ ADMIN_USERNAME = env.str('ADMIN_USERNAME')
 ADMIN_PASSWORD = env.str('ADMIN_PASSWORD')
 
 OPENAI_API_KEY = env.str("OPENAI_API_KEY")
+
+
+VECTOR_STORAGE_DIR = "./document_vectorstores"
+METADATA_FILE = os.path.join(VECTOR_STORAGE_DIR, "document_metadata.json")

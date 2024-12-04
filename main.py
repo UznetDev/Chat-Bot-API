@@ -4,7 +4,6 @@ from loader import db
 from routes import auth, user_page, promts
 
 
-
 app = FastAPI(title="ChatBot Service")
 
 app.add_middleware(
