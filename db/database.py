@@ -188,6 +188,48 @@ class Database:
         finally:
             self.cursor.nextset()
 
+    def update_user(self, user_id, email, surname, name, api_key, phone_number):
+        try:
+            self.ensure_connection()
+            # Hash the new password
+            # sql = """UPDATES users SET email = %s, surname = %s, name = %s, api_key = %s, phone_number = %s WHERE id = %s"""
+            sql = """UPDATE users SET email = %s, surname = %s, name = %s, api_key = %s, phone_number = %s WHERE id = %s"""
+            values = (email, surname, name, api_key, phone_number, user_id)
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return True
+        except mysql.connector.Error as err:
+            logging.error(f"Update user error: {err}")
+            self.reconnect()
+        finally:
+            self.cursor.nextset()
+
+
+    def delete_user(self, user_id):
+        """
+        Deletes a user from the database.
+
+        Parameters:
+            user_id (int): The ID of the user to delete.
+
+        Returns:
+            bool: True if the user is deleted successfully, False otherwise.
+
+        Raises:
+            mysql.connector.Error: If the deletion fails.
+        """
+        try:
+            self.ensure_connection()
+            sql = "DELETE FROM users WHERE id = %s"
+            self.cursor.execute(sql, (user_id,))
+            self.connection.commit()
+            return True
+        except mysql.connector.Error as err:
+            logging.error(f"Delete user error: {err}")
+            self.reconnect()
+        finally:
+            self.cursor.nextset()
+
 
     def check_username_exists(self, username):
         """

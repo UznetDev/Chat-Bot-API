@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from typing import Optional
 from pydantic import BaseModel
 from functions.functions import generate_token
 from loader import db
@@ -29,6 +30,18 @@ class UserCreate(BaseModel):
     name: str
     api_key: str
 
+    class Config:
+        json_schema_extra = {
+            "example": {
+                    "username": "example_username",
+                    "email": "example@example.com",
+                    "password": "example_password",
+                    "surname": "example_surname",
+                    "name": "example_name",
+                    "api_key": "example_api_key",
+            }
+        }
+
 
 class UserLogin(BaseModel):
     """
@@ -40,6 +53,51 @@ class UserLogin(BaseModel):
     """
     username: str
     password: str
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "username": "example_username",
+                "password": "example_password",
+            }
+        }
+
+
+class UserUpdate(BaseModel):
+
+    """
+    Data model for user update.
+
+    Attributes:
+        id (int): The ID of the user.
+        access_token (str): The access token of the user.
+        email (str, optional): The new email address for the user.
+        surname (str, optional): The new surname for the user.
+        name (str, optional): The new name for the user.
+        api_key (str, optional): The new OpenAI API key for the user.
+        phone_number (str, optional): The new phone number for the user.
+    """
+
+    id: int
+    access_token: str
+    email: Optional[str] = None
+    surname: Optional[str] = None
+    name: Optional[str] = None
+    api_key: Optional[str] = None
+    phone_number: Optional[str] = None
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "id": 1,
+                "access_token": "valid_token",
+                "email": "new_email@example.com",
+                "surname": "New_Surname",
+                "name": "New_Name",
+                "api_key": "new_api_key",
+                "phone_number": "new_phone_number",
+                    }
+                }
 
 
 
@@ -195,6 +253,91 @@ def login_with_token(access_token: str):
             )
         user_data.pop('password')
         return user_data
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+
+
+
+# update_user
+@router.put('/update_user')
+def update_user(user: UserUpdate):
+    """
+    Updates the user's information based on the provided data.
+
+    Parameters:
+
+    user (UserUpdate): A Pydantic model containing the user's updated information.
+    - id: The user's ID.
+    - access_token: The user's access token for authentication.
+    - email (Optional[str]): The new email address.
+    - surname (Optional[str]): The new surname.
+    - name (Optional[str]): The new name.
+    - api_key (Optional[str]): The new API key.
+    - phone_number (Optional[str]): The new phone number.
+
+    Returns:
+    dict: A dictionary containing the updated user data.
+    """
+    try:
+        user_data = db.login_by_token(user.access_token)
+        if not user_data:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+        if user_data['id'] != user.id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid Id"
+            )
+        user_data = db.update_user(user_id=user.id, 
+                                   email=user.email, 
+                                   surname=user.surname, 
+                                   name=user.name, 
+                                   api_key=user.api_key, 
+                                   phone_number=user.phone_number)
+        if not user_data:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+        return {"status": 200, "save": user_data}
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+# delete_user
+@router.post('delete_user')
+def delete_user(user: UserLogin):
+    """
+    Deletes a user from the database based on the provided username and password.
+
+    Parameters:
+        user (UserLogin): A Pydantic model containing the user's login credentials.
+        - username (str): The username of the user to be deleted.
+        - password (str): The password of the user to be deleted.
+
+    Returns:
+        dict: A dictionary containing a success message if the user is deleted successfully.
+
+    Raises:
+        HTTPException: If the username or password is incorrect or if an error occurs.
+
+    Example:
+        >>> response = delete_user(UserLogin(username="john_doe", password="password123"))
+        >>> response
+        {"message": "User deleted successfully"}
+    """
+    try:
+        user_data = db.delete_user(user.username, user.password)
+        if not user_data:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+        return {"message": "User deleted successfully"}
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
