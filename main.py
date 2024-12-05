@@ -7,7 +7,7 @@ from routes import auth, user_page, promts
 description = """
 # Project: ChatBot Service
 
-This project is a **FastAPI-based chatbot service** that provides various functionalities, such as user authentication, chatbot interaction, and model management. The service includes endpoints for user authentication, personalized user pages, and handling prompts.
+This project is a **FastAPI-based chatbot service** that provides various features such as user authentication, chatbot interaction, and model management. The service includes endpoints for user authentication, personalized user pages and instructions. The project can ensure that every user has their own chatbot, using OpenAI models through RAG. In addition to the OpenAI models, there is also a LLAMA model that can work for free. Users can use this model completely free of charge, the project is open source and anyone can use it.
 
 ---
 
