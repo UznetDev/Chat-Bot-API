@@ -204,7 +204,7 @@ def get_model_info(models_name: str, access_token: str):
     ## Retrieves information about a specific model for the authenticated user.
 
     ## Parameters:
-    * `model_name (str)`: *The name of the model to retrieve information about.*
+    * `models_name (str)`: *The name of the model to retrieve information about.*
     * `access_token (str)`: *The authentication token used to verify the user's identity.*
 
     ## Returns:
@@ -266,7 +266,7 @@ def get_model_info(models_name: str, access_token: str):
         user_id = user_data['id']
 
         # Fetch the model information from the database
-        data = db.get_model_infos(user_id=user_id, model_name=model_name)
+        data = db.get_model_infos(user_id=user_id, model_name=models_name)
 
         # If the model is not found, raise an exception
         if data is None:
