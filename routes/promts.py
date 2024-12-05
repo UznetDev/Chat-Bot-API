@@ -197,6 +197,7 @@ def get_answer(question: str, chat_id: int, access_token: str, model_name: str):
         # Catch unexpected errors and raise an HTTPException with details
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.get("/get_model_info")
 def get_model_info(model_name: str, access_token: str):
     """
@@ -277,6 +278,7 @@ def get_model_info(model_name: str, access_token: str):
     except Exception as e:
         # Catch unexpected errors and raise an HTTPException with details
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/upload_model/")
 async def upload_file(file: UploadFile = File(...), 
