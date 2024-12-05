@@ -57,7 +57,7 @@ def get_chat_list(access_token: str):
 
         # If the user is not found, raise a 404 exception
         if user_info is None:
-            raise HTTPException(status_code=404, detail="User not found")
+            return HTTPException(status_code=404, detail="User not found")
         
         # Extract the user ID from the user information
         user_id = user_info["id"]
@@ -141,7 +141,7 @@ def get_chat_data(access_token: str, chat_id: int):
 
         # If the user is not found, raise an exception
         if user_info is None:
-            raise HTTPException(status_code=404, detail="User not found")
+            return HTTPException(status_code=404, detail="User not found")
         
         # Extract the user's ID from the authentication data
         user_id = user_info["id"]
@@ -208,7 +208,7 @@ def create_chat(access_token: str, model_id=1):
 
         # If the user is not found, raise an exception
         if user_info is None:
-            raise HTTPException(status_code=404, detail="User not found")
+            return HTTPException(status_code=404, detail="User not found")
         
         # Extract the user's ID from the authentication data
         user_id = user_info["id"]

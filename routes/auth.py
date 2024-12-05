@@ -230,7 +230,7 @@ def login(user: UserLogin):
 
         # If no user data is returned, raise an unauthorized exception
         if not user_data:
-            raise HTTPException(
+            return HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect username or password"
             )
@@ -305,7 +305,7 @@ def login_with_token(access_token: str):
 
         # If no user data is found, raise an unauthorized exception
         if not user_data:
-            raise HTTPException(
+            return HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token"
             )
@@ -390,16 +390,16 @@ def update_user(user: UserUpdate):
         # Verify the user using their access token
         user_data = db.login_by_token(user.access_token)
 
-        # If the token is invalid, raise an exception
+        # If the token is invalid, return an exception
         if not user_data:
-            raise HTTPException(
+            return HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token"
             )
         
         # Verify that the user ID matches the authenticated user's ID
         if user_data['id'] != user.id:
-            raise HTTPException(
+            return HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid Id"
             )
@@ -416,7 +416,7 @@ def update_user(user: UserUpdate):
 
         # If the update fails, raise an exception
         if not user_data:
-            raise HTTPException(
+            return HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token"
             )
@@ -448,7 +448,7 @@ def delete_user(user: UserLogin):
 
     ## How it works:
     1. *Fetches the user from the database using the provided `username` and `password`.*
-    2. *If no matching user is found, raises an `HTTPException` with a 401 status code and the message "User not found".*
+    2. *If no matching user is found, return an `HTTPException` with a 401 status code and the message "User not found".*
     3. *Deletes the user from the database if the credentials are valid.*
     4. *Returns a success message upon successful deletion.*
 
@@ -478,7 +478,7 @@ def delete_user(user: UserLogin):
 
         # If no matching user is found, raise an exception
         if not user_data:
-            raise HTTPException(
+            return HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User not found"
             )

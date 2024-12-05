@@ -155,7 +155,7 @@ def get_answer(question: str, chat_id: int, access_token: str, model_name: str):
         # Verify the chat exists and belongs to the user
         chat_info = db.get_chat_info(chat_id, user_id)
         if chat_info is None:
-            raise HTTPException(status_code=404, detail="Chat not found")
+            return HTTPException(status_code=404, detail="Chat not found")
         
         # Update chat name if it is "Unknown"
         if chat_info['name'] == "Unknown":
@@ -164,7 +164,7 @@ def get_answer(question: str, chat_id: int, access_token: str, model_name: str):
         # Validate the specified model for the user
         model_info = db.get_model_infos(user_id=user_id, model_name=model_name)
         if model_info is None:
-            raise HTTPException(status_code=404, detail="Model not found")
+            return HTTPException(status_code=404, detail="Model not found")
 
         # Associate the model with the chat
         db.update_chat_model(chat_id=chat_id, model_id=model_info['id'])
@@ -176,7 +176,7 @@ def get_answer(question: str, chat_id: int, access_token: str, model_name: str):
         
         # Check if chat message limit is exceeded
         if len(chat_history) > 200:
-            raise HTTPException(status_code=404, detail="Limit used up")
+            return HTTPException(status_code=404, detail="Limit used up")
 
         # Construct prompts using the question and chat history
         prompts = model.create_promts(question, chat_history)
@@ -270,7 +270,7 @@ def get_model_info(model_name: str, access_token: str):
 
         # If the model is not found, raise an exception
         if data is None:
-            raise HTTPException(status_code=404, detail="Model not found")
+            return HTTPException(status_code=404, detail="Model not found")
 
         # Return the model information
         return {"status": 200, "model_data": data}
