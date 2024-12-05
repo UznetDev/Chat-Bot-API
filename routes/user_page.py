@@ -7,7 +7,6 @@ router = APIRouter()
 
 
 @router.post("/get_chats")
-@router.get("/get_chats")
 def get_chat_list(access_token: str):
     """
     Retrieves a list of chats for the authenticated user.
@@ -48,7 +47,6 @@ def get_chat_list(access_token: str):
 
 
 @router.post("/get_chat_data")
-@router.get("/get_chat_data")
 def get_chat_data(access_token: str, chat_id: int):
     """
     Retrieves the details of a specific chat for the authenticated user.
@@ -88,7 +86,6 @@ def get_chat_data(access_token: str, chat_id: int):
 
 
 @router.post("/create_chat")
-@router.get("/create_chat")
 def create_chat(access_token: str, model_id=1):
     """
     Creates a new chat for the authenticated user.
@@ -124,5 +121,6 @@ def create_chat(access_token: str, model_id=1):
 
         return {"chat_id": chat_id}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
         print(e)
+        raise HTTPException(status_code=500, detail=str(e))
+        

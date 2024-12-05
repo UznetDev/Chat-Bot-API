@@ -8,6 +8,7 @@ import openai
 router = APIRouter()
 
 
+
 @router.get("/get_models")
 def get_models(access_token: str):
     """
@@ -112,7 +113,7 @@ def get_answer(question: str, chat_id: int, access_token: str, model_name: str):
             raise HTTPException(status_code=404, detail="Chat not found")
         
         if chat_info['name'] == "Unknown":
-            db.update_chat_name(chat_id=chat_id, name=question)
+            db.update_chat_name(chat_id=chat_id, name=question[:10]+'...')
 
         model_info = db.get_model_infos(user_id=user_id, model_name=model_name)
         if model_info is None:
@@ -176,7 +177,6 @@ def get_model_info(model_name: str, access_token: str):
 
 
 @router.post("/upload/")
-@router.get("/upload/")
 async def upload_file(file: UploadFile = File(...), 
                       model_name: str = Form(...), 
                       description: str = Form(...),
