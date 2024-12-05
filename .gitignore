@@ -4,3 +4,5 @@ env
 .command
 .env
 __pycache__
+document_vectorstores/
+document_vectorstores
