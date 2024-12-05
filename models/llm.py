@@ -254,7 +254,7 @@ class LLM:
         return vectorstore.as_retriever(search_kwargs={"k": 3})
 
 
-    def query_document(self, doc_id: str, query: str, api_key: str, system: str):
+    def query_document(self, doc_id: str, query: str, api_key: str, system: str, max_tokens=1000):
         """
         Queries a document for a given input using a system prompt and a retrieval-augmented generation (RAG) pipeline.
 
@@ -270,6 +270,8 @@ class LLM:
         query (str): User query or question.
         api_key (str): API key for OpenAI.
         system (str): System instructions or prompt for the query.
+        max_tokens (int): Maximum number of tokens for the model's response. Default is 1000.
+        
 
         Returns:
         --------
@@ -287,7 +289,8 @@ class LLM:
         llm = ChatOpenAI(
             model="gpt-4o-mini",
             api_key=api_key,
-            temperature=0.3
+            temperature=0.3,
+            max_tokens=max_tokens
         )
 
         system_prompt = (
@@ -312,7 +315,7 @@ class LLM:
         # return qa_chain.run(query)
 
 
-    def open_ai_chat(self,model: str, prompt: str, api_key: int):
+    def open_ai_chat(self,model: str, prompt: str, api_key: int, max_tokens=1000):
         """
         Interacts with OpenAI's chat models to process a given prompt.
 
@@ -325,6 +328,7 @@ class LLM:
         model (str): The name of the OpenAI model to use.
         prompt (str): The input prompt or query for the model.
         api_key (str): API key for OpenAI.
+        max_tokens (int, optional): Maximum number of tokens for the model's response. Default is 1000.
 
         Returns:
         --------
@@ -336,9 +340,10 @@ class LLM:
         """
 
         try:
-            self.client = OpenAI(api_key=api_key)
+            self.client = OpenAI(api_key=api_key,)
             response = self.client.chat.completions.create(
                 model=model,
+                max_tokens=max_tokens,
                 messages=prompt
             )
             return response.choices[0].message.content
@@ -449,7 +454,6 @@ class LLM:
 
 
         string_dialogue = "You are a helpful assistant. You do not respond as 'User' or pretend to be 'User'. You only respond once as 'Assistant'."
-        print(string_dialogue)
         replicate.Client(api_token="r8_C4BxWGLYucjJSmwBkVVpwePhiTq2tkl03gUaF")
         for dict_message in chat_history:
             if dict_message["role"] == "user":

@@ -164,7 +164,7 @@ def get_answer(question: str, chat_id: int, access_token: str, model_name: str):
         # Validate the specified model for the user
         model_info = db.get_model_infos(user_id=user_id, model_name=model_name)
         if model_info is None:
-            return HTTPException(status_code=404, detail="Model not found")
+            return HTTPException(status_code=404, detail="Model not found"), model_info
 
         # Associate the model with the chat
         db.update_chat_model(chat_id=chat_id, model_id=model_info['id'])
@@ -199,7 +199,7 @@ def get_answer(question: str, chat_id: int, access_token: str, model_name: str):
 
 
 @router.get("/get_model_info")
-def get_model_info(model_name: str, access_token: str):
+def get_model_info(models_name: str, access_token: str):
     """
     ## Retrieves information about a specific model for the authenticated user.
 
@@ -312,6 +312,7 @@ async def upload_file(file: UploadFile = File(...),
     * `HTTPException(status_code=401, detail="Model building failed in embedding")`: *Raised if document embedding fails during processing.*
     * `HTTPException(status_code=401, detail="AuthenticationError")`: *Raised if an OpenAI authentication error occurs.*
     * `HTTPException(status_code=500, detail="Error message")`: *Raised for any unexpected errors during processing.*
+    * `HTTPException(status_code=400, detail="Model name already exists.")`: If model name alreadey exists.
 
     ## How it works:
     1. *Validates that the uploaded file is in PDF format.*
@@ -321,6 +322,7 @@ async def upload_file(file: UploadFile = File(...),
     5. *Inserts the model details into the database using `db.insert_model`.*
     6. *If successful, returns the document ID (`doc_id`) with a status code of 200.*
     7. *Handles errors gracefully with appropriate HTTP exceptions.*
+    8. If model's name already exists return `HTTPException(status_code=400, detail="Model name already exists.")`
 
     ## Example:
 
@@ -357,7 +359,10 @@ async def upload_file(file: UploadFile = File(...),
         # Validate file format
         if not file.filename.endswith(".pdf"):
             return HTTPException(status_code=400, detail="Invalid file format. Only PDF files are allowed.")
-        
+
+        check_model = db.check_email_exists(model_name)
+        if check_model: 
+            return HTTPException(status_code=400, detail="Model name already exists.")
         # Authenticate user
         user_data = db.login_by_token(access_token)
         if user_data is None:

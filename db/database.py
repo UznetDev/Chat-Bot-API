@@ -362,7 +362,7 @@ class Database:
         """
         try:
             self.ensure_connection()
-            sql = "SELECT * FROM users WHERE access_token = %s"
+            sql = "SELECT * FROM `users` WHERE `access_token` = %s"
             self.cursor.execute(sql, (access_token,))
             return self.cursor.fetchone()
         except mysql.connector.Error as err:
@@ -1100,7 +1100,7 @@ class Database:
             self.cursor.nextset()
 
 
-    def get_model_infos(self,user_id:int, model_name=None, model_id=None) -> Dict:
+    def get_model_infos(self,user_id:int, model_name=None, model_id=None) -> Dict | None:
         """
         Retrieves detailed information about a specific model.
         The model can be identified by either its name or its ID.
