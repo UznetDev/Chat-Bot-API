@@ -255,7 +255,7 @@ class LLM:
         return vectorstore.as_retriever(search_kwargs={"k": 3})
 
 
-    def query_document(self, doc_id: str, query: str, api_key: str, system: str, max_tokens=1000):
+    def query_document(self, doc_id: str, query: str, api_key: str, system: str, chat_history: list, max_tokens=1000):
         """
         Queries a document for a given input using a system prompt and a retrieval-augmented generation (RAG) pipeline.
 
@@ -297,23 +297,28 @@ class LLM:
         system_prompt = (
             f"{system}\n"
             "Context: {context}")
-        prompt = ChatPromptTemplate.from_messages(
-            [
-                ("system", system_prompt),
-                ("human", "{input}"),
-            ]
-        )
 
+        messages = [("system", system_prompt)]
+        
+        for history in chat_history:
+            role = history["role"]
+            if role == 'assistant':
+                role = 'ai'
+            if role == 'user':
+                role = 'human'
+
+            messages.append((role, history["content"]))
+    
+        prompt = ChatPromptTemplate.from_messages(messages)
+        
         question_answer_chain = create_stuff_documents_chain(llm, prompt)
         
         chain = create_retrieval_chain(retriever, question_answer_chain)
-        print(prompt)
+        
 
 
         res = chain.invoke({"input": query})
         return res['answer']
-
-        # return qa_chain.run(query)
 
 
     def open_ai_chat(self,model: str, prompt: str, api_key: int, max_tokens=1000):
@@ -381,7 +386,7 @@ class LLM:
             if model_data['type'] == 'chat':
                 return self.open_ai_chat(model_data['name'], prompt, api_key)
             elif model_data['type'] == 'rag_model':
-                res = self.query_document(doc_id=model_data['doc_id'], query=query, api_key=api_key, system=model_data['system'])
+                res = self.query_document(doc_id=model_data['doc_id'], query=query, api_key=api_key, system=model_data['system'], chat_history=prompt)
                 return res
             elif model_data['type'] == 'llama':
                 res = self.generate_llama2_response(query, prompt)

@@ -180,7 +180,7 @@ def get_answer(question: str, chat_id: int, access_token: str, model_name: str):
 
         # Construct prompts using the question and chat history
         prompts = model.create_promts(question, chat_history)
-
+        
         # Save the user's question to the database
         db.save_chat_message(chat_id=chat_id, user_id=user_id, content=question, role='user', model_id=model_info['id'])
 
