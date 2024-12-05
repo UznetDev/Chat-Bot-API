@@ -88,7 +88,8 @@ class LLM:
         """
         os.makedirs(VECTOR_STORAGE_DIR, exist_ok=True)
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-
+        self.replicate_api = "r8_C4BxWGLYucjJSmwBkVVpwePhiTq2tkl03gUaF"
+        os.environ['REPLICATE_API_TOKEN'] = self.replicate_api
         self.load_metadata()
 
 
@@ -454,7 +455,7 @@ class LLM:
 
 
         string_dialogue = "You are a helpful assistant. You do not respond as 'User' or pretend to be 'User'. You only respond once as 'Assistant'."
-        replicate.Client(api_token="r8_C4BxWGLYucjJSmwBkVVpwePhiTq2tkl03gUaF")
+        replicate.Client(api_token=self.replicate_api)
         for dict_message in chat_history:
             if dict_message["role"] == "user":
                 string_dialogue += "User: " + dict_message["content"] + "\n\n"
