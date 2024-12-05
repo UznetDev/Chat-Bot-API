@@ -300,7 +300,7 @@ class LLM:
 
         messages = [("system", system_prompt)]
         
-        for history in chat_history:
+        for history in chat_history[-2]:
             role = history["role"]
             if role == 'assistant':
                 role = 'ai'
