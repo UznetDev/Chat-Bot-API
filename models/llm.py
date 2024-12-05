@@ -299,13 +299,13 @@ class LLM:
             "Context: {context}")
 
         messages = [("system", system_prompt)]
-        
-        for history in chat_history[-2]:
-            role = history["role"]
-            if role == 'assistant':
-                role = 'ai'
-            if role == 'user':
-                role = 'human'
+        if len(chat_history) > 1:
+            for history in chat_history[-2]:
+                role = history["role"]
+                if role == 'assistant':
+                    role = 'ai'
+                if role == 'user':
+                    role = 'human'
 
             messages.append((role, history["content"]))
     
