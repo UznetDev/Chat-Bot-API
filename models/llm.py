@@ -299,12 +299,20 @@ class LLM:
             system_prompt = (
             f"{system}\n"
             "Context: {context}")
-            prompt = ChatPromptTemplate.from_messages(
-                [
-                    ("system", system_prompt),
-                    ("human", "{input}"),
-                ]
-            )
+            messages = [("system", system_prompt)]
+            if chat_history:
+                for history in chat_history:  # Limit to last two exchanges
+                    role = history.get("role", "")
+                    if role == 'assistant':
+                        role = 'ai'
+                    elif role == 'user':
+                        role = 'human'
+                    
+                    if role and 'content' in history:
+                        messages.append((role, history["content"]))
+            messages.append(("human", "{input}"))
+
+            prompt = ChatPromptTemplate.from_messages(messages)
 
             question_answer_chain = create_stuff_documents_chain(llm, prompt)
 
@@ -315,43 +323,6 @@ class LLM:
             res = chain.invoke({"input": query})
             return res['answer']
 
-            # Prepare system prompt with context placeholder
-            # system_prompt = (
-            #     f"{system}\n"
-            #     "Context: {context}")
-
-            # # Prepare messages for the prompt
-            # messages = [("system", system_prompt)]
-            
-            # # # Add chat history context
-            # # if chat_history:
-            # #     for history in chat_history[:-2]:  # Limit to last two exchanges
-            # #         role = history.get("role", "")
-            # #         if role == 'assistant':
-            # #             role = 'ai'
-            # #         elif role == 'user':
-            # #             role = 'human'
-                    
-            # #         if role and 'content' in history:
-            # #             messages.append((role, history["content"]))
-
-            # print(messages)
-            
-            # # Create prompt template
-            # prompt = ChatPromptTemplate.from_messages(messages)
-
-            
-            
-            # # Create document chain
-            # question_answer_chain = create_stuff_documents_chain(llm, prompt)
-            
-            # # Create retrieval chain
-            # chain = create_retrieval_chain(retriever, question_answer_chain)
-            
-            # # Invoke the chain with the query
-            # res = chain.invoke({"input": query})
-            # print(res['answer'])
-            # return res['answer']  # Return the generated answer
         
         except Exception as e:
             # Proper error handling
