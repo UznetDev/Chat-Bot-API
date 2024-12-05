@@ -133,20 +133,10 @@ def get_answer(question: str, chat_id: int, access_token: str, model_name: str):
             raise HTTPException(status_code=404, detail="Limit used up")
 
         promts = model.create_promts(question, chat_history)
-
+        print(promts)
         db.save_chat_message(chat_id=chat_id, user_id=user_id, content=question, role='user', model_id=model_info['id'])
-
-#         answer = """
-# Here's a simple Python code to print "Hello, World!":
-
-# ```python
-# print("Hello, World!")
-# ```
-
-# This is the standard way to output "Hello, World!" in Python. Let me know if you'd like variations or something more!
-# """
         
-        answer = model.get_answer(api_key=user_info['api_key'], prompt=promts, model_data=model_info)
+        answer = model.get_answer(api_key=user_info['api_key'], prompt=promts, model_data=model_info, query=question)
 
         db.save_chat_message(chat_id=chat_id, 
                              user_id=user_id, 
@@ -171,7 +161,7 @@ def get_model_info(model_name: str, access_token: str):
         if user_data is None:
             return HTTPException(status_code=401, detail="Invalid token")
         user_id = user_data['id']
-        data = db.get_model_infos(model_name, user_id)
+        data = db.get_model_infos(user_id=user_id, model_name=model_name)
         if data is None:
             raise HTTPException(status_code=404, detail="Model not found")
         return {"status": 200, "model_data": data}

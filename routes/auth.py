@@ -98,7 +98,6 @@ class UserUpdate(BaseModel):
 
 
 @router.post("/register")
-@router.get("/register")
 def register(user: UserCreate):
     """
     Registers a new user by validating their information and storing it in the database.
@@ -159,7 +158,6 @@ def register(user: UserCreate):
 
 
 @router.post("/login")
-@router.get("/login")
 def login(user: UserLogin):
     """
     Logs in an existing user by validating their credentials.
@@ -215,7 +213,6 @@ def login(user: UserLogin):
     
 
 @router.post("/login_with_token")
-@router.get("/login_with_token")
 def login_with_token(access_token: str):
     """
     Logs in a user using an existing token.

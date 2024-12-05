@@ -709,6 +709,7 @@ class Database:
                 ("gpt-4o-mini", "More capable than any GPT-3.5 model, optimized for chat. Updated with the latest iteration.", "chat", 1),
                 ("gpt-3.5-turbo", "Most capable GPT-3.5 model, optimized for chat at 1/10th the cost of text-davinci-003.", "chat", 1),
                 ("gpt-4", "More capable than any GPT-3.5 model, optimized for complex tasks and chat.", "chat", 1),
+                ("Llama 13b chat", "Llama 2 is a collection of pretrained and fine-tuned generative text models ranging in scale from 7 billion to 70 billion parameters.", "llama", 1),
             ]
 
             for model in models:

@@ -38,5 +38,15 @@
         "name": "1",
         "path": "./document_vectorstores/1.pdf",
         "vectors_path": "./document_vectorstores/af8cc6e5-18ee-4cca-86c2-1be2c897ab4c"
+    },
+    "ecf6a273-b1f1-4888-9928-2859b7ce8778": {
+        "name": "kosntitutsiya",
+        "path": "./document_vectorstores/kosntitutsiya.pdf",
+        "vectors_path": "./document_vectorstores/ecf6a273-b1f1-4888-9928-2859b7ce8778"
+    },
+    "61500990-f6ee-455a-b2b3-5269c7e5df4d": {
+        "name": "konstitutsiya",
+        "path": "./document_vectorstores/konstitutsiya.pdf",
+        "vectors_path": "./document_vectorstores/61500990-f6ee-455a-b2b3-5269c7e5df4d"
     }
 }
