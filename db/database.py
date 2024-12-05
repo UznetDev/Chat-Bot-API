@@ -1,11 +1,14 @@
 import mysql.connector
 import logging
 import hashlib
+from typing import Dict, List
+
+import mysql.connector.cursor
 
 
 class Database:
     """
-    A class to manage database interactions, including user authentication and access_token management.
+    A class to manage database interactions, including user authentication, access_token management e.t.c.
 
     Attributes:
         host (str): The hostname of the MySQL server.
@@ -39,6 +42,7 @@ class Database:
         self.database = database
         self.reconnect()
 
+
     def reconnect(self):
         """
         Establishes a new connection to the database.
@@ -50,7 +54,7 @@ class Database:
             >>>     db.ensure_connection()
             >>>     sql = "SELECT * FROM users WHERE email = %s"
             >>>     db.cursor.execute(sql, (email,))
-            >>>     return db.cursor.fetchone() is not None
+            >>>     return db.cursor.fetchone()
             >>> except mysql.connector.Error as err:
             >>>     logging.error(f"Email check error: {err}")
             >>>     db.reconnect()
@@ -74,9 +78,10 @@ class Database:
             logging.error(f"Database connection error: {err}")
             raise
     
+
     def ensure_connection(self):
         """
-        Ulanish holatini tekshirish va kerak bo'lsa qayta ulanish.
+        Ensurance connection.
         """
         if not self.connection.is_connected():
             logging.warning("Connection lost, reconnecting...")
@@ -91,9 +96,22 @@ class Database:
             - id: INT (Primary key, auto-increment)
             - username: VARCHAR(50) (Unique, not null)
             - email: VARCHAR(100) (Unique, not null)
+            - name: VARCHAR(100) User Name.
+            - surname: VARCHAR(100) User Surname.
+            - api_key: TEXT User OpenAI API KEY.
+            - phone_number: VARCHAR(20) User Phone Number.
+            - last_login: DATETIME User Last Login.
+            - date_joined: DATETIME (Default: CURRENT_TIMESTAMP).
             - password: VARCHAR(255) (Hashed, not null)
             - token: VARCHAR(255) (Unique)
             - date: DATETIME (Default: CURRENT_TIMESTAMP)
+
+        Example:
+        
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> db.create_user_table()
+        Raises:
+            mysql.connector.Error: If the create fails.
         """
         try:
             self.ensure_connection()
@@ -122,7 +140,7 @@ class Database:
 
     def register_user(self, username, email, password, access_token, surname, name, api_key):
         """
-        Registers a new user with hashed password and optional token.
+        Registers a new user with user data, hashing the password.
 
         Parameters:
             username (str): The user's username.
@@ -168,6 +186,11 @@ class Database:
             username (str): The user's username.
             password (str): The user's plaintext password.
 
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> user_info = db.login_user('john_doe', 'john1234')
+
         Returns:
             dict: User information if login is successful, otherwise None.
 
@@ -188,11 +211,34 @@ class Database:
         finally:
             self.cursor.nextset()
 
+
     def update_user(self, user_id, email, surname, name, api_key, phone_number):
         try:
+            """
+            Updates a user's information in the database.
+            `user_id` is identeficator for user.
+
+            Parameters:
+                user_id (int): The ID of the user to update.
+                email (str): The new email for the user.
+                surname (str): The new Surname for the user.
+                name (str): The new Name for the user.
+                api_key (str): The new OpenAi api_key for the user.
+                phone_number (str): The new Phone Number for the user.
+            
+            Example:
+
+                >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+                >>> update = db.update_user(1, 'new_email@example.com', 'NewSurname', 'NewName', 'new_api_key', '+1234567890')
+            Retruns:
+                True: If update is successful, otherwise False.
+
+            Raises:
+                mysql.connector.Error: If the update process fails.
+            """
+
             self.ensure_connection()
-            # Hash the new password
-            # sql = """UPDATES users SET email = %s, surname = %s, name = %s, api_key = %s, phone_number = %s WHERE id = %s"""
+            
             sql = """UPDATE users SET email = %s, surname = %s, name = %s, api_key = %s, phone_number = %s WHERE id = %s"""
             values = (email, surname, name, api_key, phone_number, user_id)
             self.cursor.execute(sql, values)
@@ -211,6 +257,11 @@ class Database:
 
         Parameters:
             user_id (int): The ID of the user to delete.
+        
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> db.delete_user(1)
 
         Returns:
             bool: True if the user is deleted successfully, False otherwise.
@@ -238,6 +289,11 @@ class Database:
         Parameters:
             username (str): The username to check.
 
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> check = db.check_username_exists('john_doe')
+
         Returns:
             bool: True if the username exists, False otherwise.
 
@@ -255,13 +311,19 @@ class Database:
         finally:
             self.cursor.nextset()
 
+
     def check_email_exists(self, email):
         """
         Checks if an email already exists in the database.
 
         Parameters:
             email (str): The email to check.
+        
+        Example:
 
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> check = db.check_email_exists('john@gmail.com') 
+        
         Returns:
             bool: True if the email exists, False otherwise.
 
@@ -280,7 +342,7 @@ class Database:
             self.cursor.nextset()
 
 
-    def login_by_token(self, token):
+    def login_by_token(self, access_token):
         """
         Authenticates a user using their token.
 
@@ -289,6 +351,11 @@ class Database:
 
         Returns:
             dict: The user's information if the access_token'is valid, otherwise None.
+        
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> user_data = db.login_by_token('your_access_token')
 
         Raises:
             mysql.connector.Error: If the operation fails.
@@ -296,7 +363,7 @@ class Database:
         try:
             self.ensure_connection()
             sql = "SELECT * FROM users WHERE access_token = %s"
-            self.cursor.execute(sql, (token,))
+            self.cursor.execute(sql, (access_token,))
             return self.cursor.fetchone()
         except mysql.connector.Error as err:
             logging.error(f"Token login error: {err}")
@@ -312,6 +379,13 @@ class Database:
         Parameters:
             user_id (int): The user's ID.
             access_token (str): The new token.
+        
+        Example:
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            update = db.update_user_token(1, 'new_access_token')
+        
+        Return:
+            True: if update is sucsesfuly, False otherwise.
 
         Raises:
             mysql.connector.Error: If the operation fails.
@@ -320,6 +394,7 @@ class Database:
             sql = "UPDATE users SET access_token = %s WHERE id = %s"
             self.cursor.execute(sql, (token, user_id))
             self.connection.commit()
+            return True
         except mysql.connector.Error as err:
             logging.error(f"Token update error: {err}")
             self.reconnect()
@@ -339,6 +414,13 @@ class Database:
             - name: VARCHAR(50) (The name of the chat)
             - model_id: INT (Foreign key referencing `models.id`)
             - timestamp: TIMESTAMP (Default: CURRENT_TIMESTAMP)
+
+        Example:
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> db.create_chats_table()
+
+        Raises:
+            mysql.connector.Error: If the operation fails.
         """
         try:
             self.ensure_connection()
@@ -362,7 +444,6 @@ class Database:
             self.cursor.nextset()
 
 
-
     def create_table_chat_messages(self):
         """
         Creates a table for storing chat messages.
@@ -375,6 +456,12 @@ class Database:
             - content: TEXT (The message content)
             - model_id: INT (Foreign key referencing `models.id`)
             - timestamp: TIMESTAMP (Default: CURRENT_TIMESTAMP)
+
+        Example:
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> db.create_table_chat_messages()
+        Raises:
+            mysql.connector.Error: If the operation fails.
         """
         try:
             self.ensure_connection()
@@ -394,6 +481,7 @@ class Database:
             """
             self.cursor.execute(sql)
             self.connection.commit()
+            return True
         except mysql.connector.Error as err:
             logging.error(f"Create chat messages table error: {err}")
             self.reconnect()
@@ -401,10 +489,9 @@ class Database:
             self.cursor.nextset()
 
 
-
     def get_user_chat_list(self, user_id):
         """
-        Retrieves a list of chats for a specific user.
+        Retrieves a list of chats for a specific user. orderid by timestamp DESC.
 
         Parameters:
             user_id (int): The ID of the user.
@@ -414,6 +501,10 @@ class Database:
                 - id (int): The chat ID.
                 - name (str): The chat name.
                 - timestamp (datetime): The creation timestamp of the chat.
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> chats = db.get_user_chat_list(1)
 
         Raises:
             mysql.connector.Error: If the operation fails.
@@ -430,7 +521,6 @@ class Database:
             self.cursor.nextset()
 
 
-
     def get_chat_data(self, chat_id, user_id):
         """
         Retrieves the messages of a specific chat for a user.
@@ -441,6 +531,10 @@ class Database:
 
         Returns:
             list[dict]: A list of messages with details (role, content, timestamp, etc.).
+
+        Example:
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> messages = db.get_chat_data(1, 1)
 
         Raises:
             mysql.connector.Error: If the operation fails.
@@ -457,7 +551,6 @@ class Database:
             self.cursor.nextset()
 
 
-
     def create_new_chat(self, user_id, name, model_id):
         """
         Creates a new chat for the user.
@@ -466,6 +559,11 @@ class Database:
             user_id (int): The ID of the user.
             name (str): The name of the chat.
             model_id (int): The ID of the model associated with the chat.
+        
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> new_chat = db.create_new_chat(1, "New Chat", 1)
 
         Returns:
             int: The ID of the newly created chat.
@@ -486,13 +584,30 @@ class Database:
             self.cursor.nextset()
 
 
-    def update_chat_name(self, chat_id, name):
-        """"""
+    def update_chat_name(self, chat_id, name) -> bool | None:
+        """
+        Updates the name of a specific chat.
+
+        Parametirs:
+            chat_id (int): The ID of the chat to update.
+            name (str): The new name for the chat.
+
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> upadte = db.update_chat_name(1, 'new_name)
+
+        Return:
+            bool: True if the update was successful, False otherwise.
+        Raises:
+            mysql.connector.Error: If the operation fails.
+        """
         try:
             self.ensure_connection()
             sql = "UPDATE chats SET name = %s WHERE id = %s"
             self.cursor.execute(sql, (name, chat_id))
             self.connection.commit()
+            return True
         except mysql.connector.Error as err:
             logging.error(f"Update chat model error: {err}")
             self.reconnect()
@@ -501,7 +616,7 @@ class Database:
 
 
 
-    def save_chat_message(self, chat_id, user_id, role, content, model_id):
+    def save_chat_message(self, chat_id, user_id, role, content, model_id) -> bool | None:
         """
         Saves a chat message in the database.
 
@@ -511,6 +626,13 @@ class Database:
             role (str): The role of the message sender (e.g., 'user', 'assistant').
             content (str): The message content.
             model_id (int): The ID of the model used for the chat.
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> save_message = db.save_chat_message(1, 1, 'user', 'Hello', 1)
+        
+        Return:
+            bool: True if the message was saved successfully, False otherwise.
 
         Raises:
             mysql.connector.Error: If the operation fails.
@@ -520,6 +642,7 @@ class Database:
             sql = "INSERT INTO chat_messages (chat_id, user_id, role, content, model_id) VALUES (%s, %s, %s, %s, %s)"
             self.cursor.execute(sql, (chat_id, user_id, role, content, model_id))
             self.connection.commit()
+            return True
         except mysql.connector.Error as err:
             logging.error(f"Save chat message error: {err}")
             self.reconnect()
@@ -527,14 +650,21 @@ class Database:
             self.cursor.nextset()
 
 
-
-    def delete_chat(self, chat_id, user_id):
+    def delete_chat(self, chat_id, user_id) -> bool | None:
         """
         Deletes a chat for a user.
 
         Parameters:
             chat_id (int): The ID of the chat to delete.
             user_id (int): The ID of the user.
+
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> delet = db.delete_chat(1, 1)
+        
+        Return:
+            bool: True if delete chat sucsesfuly, False otherwise.
 
         Raises:
             mysql.connector.Error: If the operation fails.
@@ -544,6 +674,7 @@ class Database:
             sql = "DELETE FROM chats WHERE id = %s AND user_id = %s"
             self.cursor.execute(sql, (chat_id, user_id))
             self.connection.commit()
+            return True
         except mysql.connector.Error as err:
             logging.error(f"Delete chat error: {err}")
             self.reconnect()
@@ -551,14 +682,20 @@ class Database:
             self.cursor.nextset()
 
 
-
-    def delete_chat_messages(self, chat_id, user_id):
+    def delete_chat_messages(self, chat_id, user_id) -> bool | None:
         """
         Deletes all messages from a specific chat for a user.
 
         Parameters:
             chat_id (int): The ID of the chat from which messages should be deleted.
             user_id (int): The ID of the user owning the chat.
+        
+        Example:
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> delete = db.delete_chat_messages(1, 1)
+        
+        Return:
+            bool: True if delete chat messages sucsesfuly, False otherwise.
 
         Raises:
             mysql.connector.Error: If the operation fails.
@@ -568,6 +705,7 @@ class Database:
             sql = "DELETE FROM chat_messages WHERE chat_id = %s AND user_id = %s"
             self.cursor.execute(sql, (chat_id, user_id))
             self.connection.commit()
+            return True
         except mysql.connector.Error as err:
             logging.error(f"Delete chat messages error: {err}")
             self.reconnect()
@@ -575,14 +713,54 @@ class Database:
             self.cursor.nextset()
 
 
+    def get_chat_messages(self, chat_id, user_id) -> List[Dict]:
+        """
+        Retrieves all messages associated with a specific chat for a given user.
 
-    def get_chat_info(self, chat_id, user_id):
+        Parameters:
+            chat_id (int): The ID of the chat to retrieve messages from.
+            user_id (int): The ID of the user for whom to retrieve messages.
+
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> chat_data = db.get_chat_messages(1, 123)
+
+        Returns:
+            list[dict]: A list of dictionaries, each containing:
+                - id: INT (Message ID)
+                - chat_id: INT (Chat ID)
+                - user_id: INT (User ID)
+                - content: TEXT (Message content)
+                - created_at: TIMESTAMP (Message creation timestamp)
+
+        Raises:
+            mysql.connector.Error: If the query fails.
+        """
+        try:
+            self.ensure_connection()
+            sql = "SELECT * FROM chat_messages WHERE chat_id = %s AND user_id = %s"
+            self.cursor.execute(sql, (chat_id, user_id))
+            return self.cursor.fetchall()
+        except mysql.connector.Error as err:
+            logging.error(f"Get model infos error: {err}")
+            self.reconnect()
+        finally:
+            self.cursor.nextset()
+
+
+    def get_chat_info(self, chat_id, user_id) -> Dict | None:
         """
         Retrieves the name of a specific chat for a user.
 
         Parameters:
             chat_id (int): The ID of the chat.
             user_id (int): The ID of the user owning the chat.
+        
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> chat_info = db.get_chat_info(1, 1)
 
         Returns:
             dict: A dictionary containing the chat name, or None if the chat doesn't exist.
@@ -603,9 +781,8 @@ class Database:
             self.cursor.nextset()
 
 
-
 # ========================= Password Utilities =========================
-    def hash_password(self, password):
+    def hash_password(self, password) -> str | None:
         """
         Hashes a plaintext password using the SHA-256 algorithm.
 
@@ -623,6 +800,7 @@ class Database:
         Example:
             >>> db.hash_password("securepassword")
             '5e884898da28047151d0e56f8dc6292773603d0d6aabbddbd8e8c5b5a5dfb20d'
+
         """
         return hashlib.sha256(password.encode()).hexdigest()
 
@@ -655,7 +833,7 @@ class Database:
 
     # ========================= Model Management =========================
 
-    def create_table_models(self):
+    def create_table_models(self) -> None:
         """
         Creates a table for storing AI model information and pre-populates it with default models.
 
@@ -733,7 +911,7 @@ class Database:
                      max_tokens: int, 
                      creator_id: int,  
                      doc_id: str,
-                     model_type: str):
+                     model_type: str) -> bool | None:
         """ 
         Inserts a new AI model into the database.
 
@@ -751,6 +929,9 @@ class Database:
             >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
             >>> db.insert_model("custom-model", "A custom model for specific tasks.", "chat", "You are a helpful assistant.", True, 1000, 1, "doc123")
 
+        Return:
+            bool: True if create sucsesfully, False otherwise.
+            
         Raises:
             mysql.connector.Error: If the model insertion fails.
         """
@@ -766,6 +947,7 @@ class Database:
             self.reconnect()
         finally:
             self.cursor.nextset()
+
 
     def update_model(self, model_id: int, name: str, description: str, type: str, system: str, visibility: bool, max_tokens: int, doc_id: str):
         """
@@ -799,10 +981,42 @@ class Database:
             logging.error(f"Update model error: {err}")
 
 
+    def delete_model(self, model_id: int, user_id: int) -> bool | None:
+        """
+        Deletes an AI model from the database.
+        Args:
+            model_id (int): The ID of the model to delete.
+            user_id (int): The ID of the user attempting to delete the model.
 
-    def get_models_list(self, user_id):
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> db.delete_model(1, 1)
+
+        Raises:
+            mysql.connector.Error: If the model deletion fails.
+        """
+        try:
+            sql = "DELETE FROM models WHERE id = %s AND creator_id = %s"
+            values = (model_id, user_id)
+            self.cursor.execute(sql, values)
+            self.connection.commit()
+            return True
+        except mysql.connector.Error as err:
+            logging.error(f"Delete model error: {err}")
+
+
+    def get_models_list(self, user_id) -> Dict | None:
         """
         Retrieves a list of all AI models available in the database.
+
+        Parametirs:
+            user_id (int): specific ID for user.
+
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> db.get_models_list(1)
 
         Returns:
             list[dict]: A list of dictionaries, each containing:
@@ -828,13 +1042,17 @@ class Database:
             self.cursor.nextset()
 
 
-
     def check_model_exists(self, model_name):
         """
         Checks if a specific model exists in the database.
 
         Parameters:
             model_name (str): The name of the model to check.
+
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> check = db.check_model_exists('model Name')
 
         Returns:
             bool: True if the model exists, False otherwise.
@@ -854,7 +1072,6 @@ class Database:
             self.cursor.nextset()
 
 
-
     def update_chat_model(self, chat_id, model_id):
         """
         Updates the AI model associated with a specific chat.
@@ -862,6 +1079,11 @@ class Database:
         Parameters:
             chat_id (int): The ID of the chat to update.
             model_id (int): The ID of the new model to associate with the chat.
+
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> update = db.updat_chat_model(1, 2)
 
         Raises:
             mysql.connector.Error: If the update fails.
@@ -878,13 +1100,20 @@ class Database:
             self.cursor.nextset()
 
 
-
-    def get_model_infos(self,user_id:int, model_name=None, model_id=None):
+    def get_model_infos(self,user_id:int, model_name=None, model_id=None) -> Dict:
         """
         Retrieves detailed information about a specific model.
+        The model can be identified by either its name or its ID.
+        At least one of the parameters (model_name or model_id) must be provided.
 
         Parameters:
             model_id (int): The ID of the model to retrieve.
+            model_name (int): The name of the model to retrieve.
+        Example:
+
+            >>> db = Database(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE)
+            >>> model_info = db.get_model_infos(1, model_name='model Name')
+            >>> model_info = db.get_model_infos(1, model_id=123)
 
         Returns:
             dict: A dictionary containing:
@@ -913,37 +1142,6 @@ class Database:
             self.cursor.nextset()
 
 
-
-    def get_chat_messages(self, chat_id, user_id):
-        """
-        Retrieves all messages associated with a specific chat for a given user.
-
-        Parameters:
-            chat_id (int): The ID of the chat to retrieve messages from.
-            user_id (int): The ID of the user for whom to retrieve messages.
-
-        Returns:
-            list[dict]: A list of dictionaries, each containing:
-                - id: INT (Message ID)
-                - chat_id: INT (Chat ID)
-                - user_id: INT (User ID)
-                - content: TEXT (Message content)
-                - created_at: TIMESTAMP (Message creation timestamp)
-
-        Raises:
-            mysql.connector.Error: If the query fails.
-        """
-        try:
-            self.ensure_connection()
-            sql = "SELECT * FROM chat_messages WHERE chat_id = %s AND user_id = %s"
-            self.cursor.execute(sql, (chat_id, user_id))
-            return self.cursor.fetchall()
-        except mysql.connector.Error as err:
-            logging.error(f"Get model infos error: {err}")
-            self.reconnect()
-        finally:
-            self.cursor.nextset()
-
     # ========================= Closing Resources =========================
 
     def close(self):
@@ -955,8 +1153,9 @@ class Database:
             proper resource cleanup.
 
         Example:
-            db = Database(host="localhost", user="root", password="password", database="testdb")
-            db.close()
+            >>> db = Database(host="localhost", user="root", password="password", database="testdb")
+            >>> db.close()
+
         """
         if self.cursor:
             self.cursor.close()
@@ -969,3 +1168,4 @@ class Database:
         Ensures the database connection is closed when the object is deleted.
         """
         self.close()
+

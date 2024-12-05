@@ -5,8 +5,8 @@ import shutil
 from data.config import VECTOR_STORAGE_DIR
 import openai
 
-router = APIRouter()
 
+router = APIRouter()
 
 
 @router.get("/get_models")
@@ -171,12 +171,7 @@ def get_model_info(model_name: str, access_token: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
-
-
-
-
-@router.post("/upload/")
+@router.post("/upload_model/")
 async def upload_file(file: UploadFile = File(...), 
                       model_name: str = Form(...), 
                       description: str = Form(...),
@@ -224,3 +219,25 @@ async def upload_file(file: UploadFile = File(...),
         return HTTPException(status_code=401, detail=str(err))
         
 
+@router.delete("delete_model")
+def delete_model(model_id: str, access_token: str):
+    """
+    
+    """
+
+    user_data = db.login_by_token(access_token)
+    if user_data is None:
+        return HTTPException(status_code=401, detail="Invalid token")
+    user_id = user_data['id']
+    model_info = db.get_model_infos(user_id=user_id, model_id=model_id)
+    if model_info is None:
+        return HTTPException(status_code=404, detail="Model not found")
+    if model_info['creator_id'] != user_id:
+        return HTTPException(status_code=403, detail="You are not the owner of this model")
+
+    delete = db.delete_model(model_id=model_id, user_id=user_id)
+
+    if delete:
+        return {"status": 200, "message": "Model deleted successfully"}
+    else:
+        return HTTPException(status_code=500, detail="Failed to delete model")
