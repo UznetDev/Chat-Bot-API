@@ -271,8 +271,8 @@ class LLM:
         query (str): User query or question.
         api_key (str): API key for OpenAI.
         system (str): System instructions or prompt for the query.
+        chat_history (list): Chat history for context.
         max_tokens (int): Maximum number of tokens for the model's response. Default is 1000.
-        
 
         Returns:
         --------
@@ -283,42 +283,79 @@ class LLM:
         ValueError: If the document ID does not exist.
         Exception: For any errors during query processing.
         """
+        try:
+            # Retrieve the document retriever
+            retriever = self.get_document_retriever(doc_id, api_key=api_key)
+            
+            # Initialize OpenAI chat model
+            llm = ChatOpenAI(
+                model="gpt-4o-mini",
+                api_key=api_key,
+                temperature=0.3,
+                max_tokens=max_tokens
+            )
 
-        retriever = self.get_document_retriever(doc_id, api_key=api_key)
-        
 
-        llm = ChatOpenAI(
-            model="gpt-4o-mini",
-            api_key=api_key,
-            temperature=0.3,
-            max_tokens=max_tokens
-        )
-
-        system_prompt = (
+            system_prompt = (
             f"{system}\n"
             "Context: {context}")
+            prompt = ChatPromptTemplate.from_messages(
+                [
+                    ("system", system_prompt),
+                    ("human", "{input}"),
+                ]
+            )
 
-        messages = [("system", system_prompt)]
-        if len(chat_history) > 1:
-            for history in chat_history[-2]:
-                role = history["role"]
-                if role == 'assistant':
-                    role = 'ai'
-                if role == 'user':
-                    role = 'human'
+            question_answer_chain = create_stuff_documents_chain(llm, prompt)
 
-            messages.append((role, history["content"]))
-    
-        prompt = ChatPromptTemplate.from_messages(messages)
+            chain = create_retrieval_chain(retriever, question_answer_chain)
+            print(prompt)
+
+
+            res = chain.invoke({"input": query})
+            return res['answer']
+
+            # Prepare system prompt with context placeholder
+            # system_prompt = (
+            #     f"{system}\n"
+            #     "Context: {context}")
+
+            # # Prepare messages for the prompt
+            # messages = [("system", system_prompt)]
+            
+            # # # Add chat history context
+            # # if chat_history:
+            # #     for history in chat_history[:-2]:  # Limit to last two exchanges
+            # #         role = history.get("role", "")
+            # #         if role == 'assistant':
+            # #             role = 'ai'
+            # #         elif role == 'user':
+            # #             role = 'human'
+                    
+            # #         if role and 'content' in history:
+            # #             messages.append((role, history["content"]))
+
+            # print(messages)
+            
+            # # Create prompt template
+            # prompt = ChatPromptTemplate.from_messages(messages)
+
+            
+            
+            # # Create document chain
+            # question_answer_chain = create_stuff_documents_chain(llm, prompt)
+            
+            # # Create retrieval chain
+            # chain = create_retrieval_chain(retriever, question_answer_chain)
+            
+            # # Invoke the chain with the query
+            # res = chain.invoke({"input": query})
+            # print(res['answer'])
+            # return res['answer']  # Return the generated answer
         
-        question_answer_chain = create_stuff_documents_chain(llm, prompt)
-        
-        chain = create_retrieval_chain(retriever, question_answer_chain)
-        
-
-
-        res = chain.invoke({"input": query})
-        return res['answer']
+        except Exception as e:
+            # Proper error handling
+            raise ValueError(f"Error processing document query: {str(e)}")
 
 
     def open_ai_chat(self,model: str, prompt: str, api_key: int, max_tokens=1000):
