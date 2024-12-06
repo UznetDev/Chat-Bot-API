@@ -80,7 +80,7 @@ The primary goal of Chat-Bot-API is to:
 
 5. **Run the Application**:
    ```bash
-   uvicorn main:app --reload
+   fastapi dev main.py
    ```
 
 6. **Access the API**:
