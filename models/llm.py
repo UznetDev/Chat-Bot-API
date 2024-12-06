@@ -2,7 +2,7 @@ import os
 import uuid
 import json
 import replicate
-from data.config import VECTOR_STORAGE_DIR, METADATA_FILE
+from data.config import VECTOR_STORAGE_DIR, METADATA_FILE, REPLECATE_API
 from typing import List, Dict
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -14,6 +14,7 @@ from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
+
 
 """
 LLM Class
@@ -88,7 +89,7 @@ class LLM:
         """
         os.makedirs(VECTOR_STORAGE_DIR, exist_ok=True)
         self.embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-        self.replicate_api = "r8_C4BxWGLYucjJSmwBkVVpwePhiTq2tkl03gUaF"
+        self.replicate_api = REPLECATE_API
         os.environ['REPLICATE_API_TOKEN'] = self.replicate_api
         self.load_metadata()
 
